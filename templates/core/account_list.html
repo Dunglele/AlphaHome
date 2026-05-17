@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quản lý tài khoản — AlphaHome{% endblock %}
+{% block active_account %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;margin:0;">
+        <i class="fa-solid fa-users-gear me-2" style="color:var(--honey-primary);"></i>
+        Quản lý tài khoản
+    </h1>
+    <a href="{% url 'account_create' %}" class="btn-honey text-decoration-none px-3 py-2" style="font-size:14px;">
+        <i class="fa-solid fa-user-plus me-1"></i> Thêm tài khoản
+    </a>
+</div>
+
+<div class="ah-table">
+    <table class="table mb-0">
+        <thead>
+            <tr>
+                <th>Tên đăng nhập</th>
+                <th>Họ và tên</th>
+                <th>Số điện thoại</th>
+                <th>Vai trò</th>
+                <th>Ngày tạo</th>
+                <th class="text-end">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td class="fw-semibold" style="color:var(--honey-dark);">{{ u.username }}</td>
+                <td>
+                    {% if u.quanly %}
+                        {{ u.quanly.ho_ten }}
+                    {% elif u.nhanvien %}
+                        {{ u.nhanvien.ho_ten }}
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if u.quanly %}
+                        {{ u.quanly.so_dien_thoai }}
+                    {% elif u.nhanvien %}
+                        {{ u.nhanvien.so_dien_thoai }}
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if u.is_staff or u.quanly %}
+                    <span class="badge-status badge-honey">Quản lý</span>
+                    {% else %}
+                    <span class="badge-status badge-available" style="background:#e8f5e9;color:#2e7d32;">Nhân viên Sale</span>
+                    {% endif %}
+                </td>
+                <td style="font-size:13px;">{{ u.date_joined|date:"d/m/Y H:i" }}</td>
+                <td class="text-end">
+                    {% if u != request.user %}
+                    <a href="{% url 'account_edit' u.pk %}" class="btn btn-sm btn-outline-primary border-0 rounded-3 py-1 me-1" style="font-size:12px;">
+                        <i class="fa-regular fa-pen-to-square me-1"></i>Sửa
+                    </a>
+                    <form method="post" action="{% url 'account_delete' u.pk %}" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài khoản này không? Mọi dữ liệu liên quan sẽ bị ảnh hưởng.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-3 py-1" style="font-size:12px;">
+                            <i class="fa-regular fa-trash-can me-1"></i>Xóa
+                        </button>
+                    </form>
+                    {% else %}
+                    <span class="text-muted" style="font-size:12px;"><i class="fa-solid fa-user-check me-1"></i>Đang dùng</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center py-5 text-muted">
+                    <p class="mb-0">Chưa có tài khoản nào.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav class="d-flex justify-content-center mt-3">
+    <ul class="pagination pagination-sm gap-1">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="fa-solid fa-chevron-left"></i></a></li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}"><i class="fa-solid fa-chevron-right"></i></a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

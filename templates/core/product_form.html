@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if phong %}Sửa{% else %}Thêm{% endif %} phòng — AlphaHome{% endblock %}
+{% block active_product_manage %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{% url 'product_list' %}" class="btn btn-sm btn-outline-secondary rounded-3">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <h1 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;margin:0;">
+                {% if phong %}Chỉnh sửa phòng{% else %}Thêm phòng mới{% endif %}
+            </h1>
+        </div>
+
+        <form method="post" id="productForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if phong %}<input type="hidden" name="pk" value="{{ phong.pk }}">{% endif %}
+
+            <!-- Basic Info -->
+            <div class="ah-panel mb-4">
+                <div class="ah-panel-title"><i class="fa-solid fa-circle-info"></i> Thông tin cơ bản</div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="id_ten_ch">Tên phòng / căn hộ <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="ten_ch" id="id_ten_ch"
+                               value="{{ phong.ten_ch|default:'' }}" placeholder="Ví dụ: Phòng trọ cao cấp Quận 1 full nội thất" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="id_gia">Giá thuê (VNĐ/tháng) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="gia" id="id_gia"
+                               value="{{ phong.gia|default:'' }}" placeholder="5000000" min="0" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="id_loai_phong">Loại phòng <span class="text-danger">*</span></label>
+                        <select class="form-select" name="loai_phong" id="id_loai_phong" required>
+                            <option value="BANCOL" {% if phong.loai_phong == 'BANCOL' %}selected{% endif %}>Bancol</option>
+                            <option value="DUPLEX" {% if phong.loai_phong == 'DUPLEX' %}selected{% endif %}>Duplex</option>
+                            <option value="THUONG" {% if phong.loai_phong == 'THUONG' %}selected{% endif %}>Thường</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="id_chuyen_muc">Chuyên mục <span class="text-danger">*</span></label>
+                        <select class="form-select" name="chuyen_muc" id="id_chuyen_muc" required>
+                            {% for cm in chuyen_muc_list %}
+                            <option value="{{ cm.pk }}" {% if phong.chuyen_muc_id == cm.pk %}selected{% endif %}>
+                                {{ cm.ten_cm }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="id_dien_tich">Diện tích (m²)</label>
+                        <input type="number" class="form-control" name="dien_tich" id="id_dien_tich"
+                               value="{{ phong.dien_tich|default:'' }}" placeholder="30" step="0.1" min="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="id_trang_thai">Trạng thái</label>
+                        <select class="form-select" name="trang_thai" id="id_trang_thai">
+                            <option value="TRONG" {% if phong.trang_thai == 'TRONG' or not phong %}selected{% endif %}>Còn trống</option>
+                            <option value="CHO_DUYET" {% if phong.trang_thai == 'CHO_DUYET' %}selected{% endif %}>Chờ duyệt</option>
+                            <option value="DA_THUE" {% if phong.trang_thai == 'DA_THUE' %}selected{% endif %}>Đã thuê</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="id_mo_ta">Mô tả chi tiết</label>
+                        <textarea class="form-control" name="mo_ta" id="id_mo_ta" rows="5"
+                                  placeholder="Mô tả chi tiết về phòng, tiện nghi, lưu ý...">{{ phong.mo_ta|default:'' }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address -->
+            <div class="ah-panel mb-4">
+                <div class="ah-panel-title"><i class="fa-solid fa-location-dot"></i> Địa chỉ</div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="id_tinh">Tỉnh / Thành phố</label>
+                        <input type="text" class="form-control" name="tinh" id="id_tinh"
+                               value="{{ phong.dia_chi.tinh|default:'TP Hồ Chí Minh' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="id_quan">Quận / Huyện <span class="text-danger">*</span></label>
+                        <select class="form-select" name="quan" id="id_quan" required>
+                            <option value="">-- Chọn Quận/Huyện --</option>
+                            <option value="Quận 1" {% if phong.dia_chi.quan == 'Quận 1' %}selected{% endif %}>Quận 1</option>
+                            <option value="Quận 3" {% if phong.dia_chi.quan == 'Quận 3' %}selected{% endif %}>Quận 3</option>
+                            <option value="Quận 4" {% if phong.dia_chi.quan == 'Quận 4' %}selected{% endif %}>Quận 4</option>
+                            <option value="Quận 5" {% if phong.dia_chi.quan == 'Quận 5' %}selected{% endif %}>Quận 5</option>
+                            <option value="Quận 6" {% if phong.dia_chi.quan == 'Quận 6' %}selected{% endif %}>Quận 6</option>
+                            <option value="Quận 7" {% if phong.dia_chi.quan == 'Quận 7' %}selected{% endif %}>Quận 7</option>
+                            <option value="Quận 8" {% if phong.dia_chi.quan == 'Quận 8' %}selected{% endif %}>Quận 8</option>
+                            <option value="Quận 10" {% if phong.dia_chi.quan == 'Quận 10' %}selected{% endif %}>Quận 10</option>
+                            <option value="Quận 11" {% if phong.dia_chi.quan == 'Quận 11' %}selected{% endif %}>Quận 11</option>
+                            <option value="Quận 12" {% if phong.dia_chi.quan == 'Quận 12' %}selected{% endif %}>Quận 12</option>
+                            <option value="Quận Bình Tân" {% if phong.dia_chi.quan == 'Quận Bình Tân' %}selected{% endif %}>Quận Bình Tân</option>
+                            <option value="Quận Bình Thạnh" {% if phong.dia_chi.quan == 'Quận Bình Thạnh' %}selected{% endif %}>Quận Bình Thạnh</option>
+                            <option value="Quận Gò Vấp" {% if phong.dia_chi.quan == 'Quận Gò Vấp' %}selected{% endif %}>Quận Gò Vấp</option>
+                            <option value="Quận Phú Nhuận" {% if phong.dia_chi.quan == 'Quận Phú Nhuận' %}selected{% endif %}>Quận Phú Nhuận</option>
+                            <option value="Quận Tân Bình" {% if phong.dia_chi.quan == 'Quận Tân Bình' %}selected{% endif %}>Quận Tân Bình</option>
+                            <option value="Quận Tân Phú" {% if phong.dia_chi.quan == 'Quận Tân Phú' %}selected{% endif %}>Quận Tân Phú</option>
+                            <option value="TP. Thủ Đức" {% if phong.dia_chi.quan == 'TP. Thủ Đức' %}selected{% endif %}>TP. Thủ Đức</option>
+                            <option value="Huyện Bình Chánh" {% if phong.dia_chi.quan == 'Huyện Bình Chánh' %}selected{% endif %}>Huyện Bình Chánh</option>
+                            <option value="Huyện Cần Giờ" {% if phong.dia_chi.quan == 'Huyện Cần Giờ' %}selected{% endif %}>Huyện Cần Giờ</option>
+                            <option value="Huyện Củ Chi" {% if phong.dia_chi.quan == 'Huyện Củ Chi' %}selected{% endif %}>Huyện Củ Chi</option>
+                            <option value="Huyện Hóc Môn" {% if phong.dia_chi.quan == 'Huyện Hóc Môn' %}selected{% endif %}>Huyện Hóc Môn</option>
+                            <option value="Huyện Nhà Bè" {% if phong.dia_chi.quan == 'Huyện Nhà Bè' %}selected{% endif %}>Huyện Nhà Bè</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="id_dia_chi_cu_the">Địa chỉ cụ thể</label>
+                        <input type="text" class="form-control" name="dia_chi_cu_the" id="id_dia_chi_cu_the"
+                               value="{{ phong.dia_chi.dia_chi_cu_the|default:'' }}" placeholder="123 Nguyễn Trãi">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Images -->
+            <div class="ah-panel mb-4">
+                <div class="ah-panel-title"><i class="fa-solid fa-images"></i> Ảnh sản phẩm</div>
+                
+                <div class="row g-4">
+                    <!-- Phía trên: Input -->
+                    <div class="col-md-12">
+                        <div class="upload-zone p-4 border border-dashed rounded-4 text-center mb-4" style="border: 2px dashed #dee2e6; background: #f8f9fa;">
+                            <i class="fa-solid fa-cloud-arrow-up text-muted mb-2" style="font-size: 40px;"></i>
+                            <h6 class="mb-1">Tải ảnh lên từ thiết bị</h6>
+                            <p class="text-muted small mb-3">Hỗ trợ JPG, PNG, WEBP. Bạn có thể chọn nhiều tệp.</p>
+                            <input type="file" class="form-control d-none" name="anh_files" id="anh_files" multiple accept="image/*">
+                            <button type="button" class="btn btn-honey-outline btn-sm px-4" onclick="document.getElementById('anh_files').click()">
+                                <i class="fa-solid fa-folder-open me-1"></i> Chọn tệp tin
+                            </button>
+                        </div>
+
+                        <label class="form-label fw-bold small text-uppercase" style="letter-spacing: 0.5px;">Hoặc nhập Link ảnh (URL)</label>
+                        <div id="anhContainer">
+                            {% if phong %}
+                            {% for anh in phong.anh_set.all %}
+                            <div class="d-flex gap-2 mb-2 anh-row">
+                                <input type="url" class="form-control form-control-sm url-input" name="anh_url"
+                                       value="{{ anh.link_anh }}" placeholder="https://...">
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-2 flex-shrink-0 remove-anh">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="d-flex gap-2 mb-2 anh-row">
+                                <input type="url" class="form-control form-control-sm url-input" name="anh_url" placeholder="https://images.unsplash.com/...">
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-2 flex-shrink-0 remove-anh">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 mt-1" id="addAnh">
+                            <i class="fa-solid fa-plus-circle me-1"></i>Thêm dòng URL
+                        </button>
+                    </div>
+
+                    <!-- Phía dưới: Preview Grid -->
+                    <div class="col-md-12">
+                        <hr class="my-2 opacity-50">
+                        <label class="form-label fw-bold small text-uppercase mb-3">Xem trước hình ảnh</label>
+                        <div id="previewGrid" class="row g-2">
+                            <!-- Preview items will appear here -->
+                        </div>
+                        <div id="noPreview" class="text-center py-4 text-muted border rounded-3 bg-light" style="font-size: 13px;">
+                            <i class="fa-solid fa-image-slash d-block mb-2" style="font-size: 24px;"></i>
+                            Chưa có ảnh nào được chọn
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex gap-3">
+                <a href="{% url 'product_list' %}" class="btn-honey-outline text-decoration-none px-4 py-2">Hủy</a>
+                <button type="submit" class="btn-honey flex-grow-1 py-2">
+                    <i class="fa-solid fa-floppy-disk me-2"></i>
+                    {% if phong %}Lưu thay đổi{% else %}Thêm phòng{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .preview-item {
+        position: relative;
+        width: 100px;
+        height: 100px;
+    }
+    .preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+    }
+    .preview-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: var(--honey-primary);
+        color: white;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 2;
+    }
+    .btn-remove-preview {
+        position: absolute;
+        bottom: -5px;
+        right: -5px;
+        background: #ff4757;
+        color: white;
+        border: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        z-index: 2;
+        transition: transform 0.2s;
+    }
+    .btn-remove-preview:hover {
+        transform: scale(1.2);
+        background: #ff6b81;
+    }
+</style>
+<script>
+    let dt = new DataTransfer();
+    const previewGrid = document.getElementById('previewGrid');
+    const noPreview = document.getElementById('noPreview');
+    const fileInput = document.getElementById('anh_files');
+    const anhContainer = document.getElementById('anhContainer');
+
+    function updatePreview() {
+        previewGrid.innerHTML = '';
+        let hasImage = false;
+
+        // 1. Preview from File Input (dt.files)
+        Array.from(dt.files).forEach((file, index) => {
+            hasImage = true;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                addPreviewItem(e.target.result, 'Tệp', 'file', index);
+            }
+            reader.readAsDataURL(file);
+        });
+
+        // 2. Preview from URL Inputs
+        document.querySelectorAll('.url-input').forEach((input, index) => {
+            if (input.value.trim() !== '') {
+                hasImage = true;
+                addPreviewItem(input.value.trim(), 'URL', 'url', index);
+            }
+        });
+
+        noPreview.style.display = hasImage ? 'none' : 'block';
+    }
+
+    function addPreviewItem(src, label, type, index) {
+        const div = document.createElement('div');
+        div.className = 'col-auto';
+        div.innerHTML = `
+            <div class="preview-item">
+                <img src="${src}" onerror="this.src='https://placehold.co/100x100?text=Lỗi+URL'">
+                <span class="preview-badge">${label}</span>
+                <button type="button" class="btn-remove-preview" onclick="removePreview('${type}', ${index})">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        `;
+        previewGrid.appendChild(div);
+    }
+
+    window.removePreview = function(type, index) {
+        if (type === 'file') {
+            const newDt = new DataTransfer();
+            Array.from(dt.files).forEach((file, i) => {
+                if (i !== index) newDt.items.add(file);
+            });
+            dt = newDt;
+            fileInput.files = dt.files;
+            updatePreview();
+        } else {
+            const inputs = document.querySelectorAll('.anh-row');
+            if (inputs[index]) {
+                inputs[index].remove();
+                updatePreview();
+            }
+        }
+    }
+
+    // Listeners
+    fileInput.addEventListener('change', function() {
+        // Add new files to our DataTransfer object
+        for (let file of this.files) {
+            dt.items.add(file);
+        }
+        this.files = dt.files; // Sync back to input
+        updatePreview();
+    });
+    
+    anhContainer.addEventListener('input', (e) => {
+        if (e.target.classList.contains('url-input')) updatePreview();
+    });
+
+    document.getElementById('addAnh').addEventListener('click', function () {
+        const row = document.createElement('div');
+        row.className = 'd-flex gap-2 mb-2 anh-row';
+        row.innerHTML = `
+            <input type="url" class="form-control form-control-sm url-input" name="anh_url" placeholder="https://...">
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-2 flex-shrink-0 remove-anh">
+                <i class="fa-solid fa-xmark"></i>
+            </button>`;
+        anhContainer.appendChild(row);
+        // Don't update preview yet, wait for input
+    });
+
+    anhContainer.addEventListener('click', function (e) {
+        if (e.target.closest('.remove-anh')) {
+            e.target.closest('.anh-row').remove();
+            updatePreview();
+        }
+    });
+
+    // Initial preview if editing
+    window.onload = updatePreview;
+</script>
+{% endblock %}

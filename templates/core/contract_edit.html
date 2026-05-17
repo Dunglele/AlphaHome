@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sửa Hợp Đồng — {{ phong.ten_ch }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <!-- Header -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{% url 'product_detail' phong.pk %}" class="btn btn-sm btn-outline-secondary rounded-3">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;margin:0;">
+                    Sửa Hợp Đồng
+                </h1>
+                <p class="text-muted mb-0" style="font-size:13px;">HĐ-{{ hd.pk|stringformat:"04d" }}</p>
+            </div>
+            <span class="badge-status badge-pending ms-auto">
+                <i class="fa-solid fa-clock" style="font-size:7px;"></i> Chờ duyệt
+            </span>
+        </div>
+
+        <!-- Room summary card -->
+        <div class="ah-panel mb-4 d-flex gap-3 align-items-center">
+            {% with phong.anh_set.first as anh %}
+            {% if anh %}
+            <img src="{{ anh.link_anh }}" alt="" style="width:80px;height:70px;object-fit:cover;border-radius:10px;flex-shrink:0;">
+            {% else %}
+            <div style="width:80px;height:70px;background:var(--honey-amber);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--honey-dark);font-size:28px;flex-shrink:0;">
+                <i class="fa-solid fa-building"></i>
+            </div>
+            {% endif %}
+            {% endwith %}
+            <div>
+                <div class="fw-bold" style="font-size:15px;">{{ phong.ten_ch }}</div>
+                <div style="font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;color:var(--price-color);">
+                    {{ phong.gia_format }}
+                </div>
+                {% if phong.dia_chi %}
+                <div class="text-muted" style="font-size:12px;">
+                    <i class="fa-solid fa-location-dot me-1" style="color:var(--honey-primary);"></i>
+                    {{ phong.dia_chi.dia_chi_day_du }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" id="saleForm">
+            {% csrf_token %}
+
+            <!-- Section 1: Customer Info -->
+            <div class="ah-panel mb-4">
+                <div class="ah-panel-title">
+                    <i class="fa-solid fa-user"></i> Thông tin khách hàng
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="id_ho_ten">Họ và tên <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="ho_ten" id="id_ho_ten"
+                               value="{{ hd.khach_hang.ho_ten }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="id_sdt">Số điện thoại <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" name="so_dien_thoai" id="id_sdt"
+                               value="{{ hd.khach_hang.so_dien_thoai }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="id_email">Email</label>
+                        <input type="email" class="form-control" name="email" id="id_email"
+                               value="{{ hd.khach_hang.email }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Contract Info -->
+            <div class="ah-panel mb-4">
+                <div class="ah-panel-title">
+                    <i class="fa-solid fa-file-contract"></i> Thông tin hợp đồng
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="id_ngay_lap">Ngày lập hợp đồng <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="ngay_lap" id="id_ngay_lap"
+                               required value="{{ hd.ngay_lap|date:'Y-m-d' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="id_tong_tien">Tổng tiền thu (VNĐ) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="tong_tien_thu" id="id_tong_tien"
+                               value="{{ hd.tong_tien_thu|stringformat:'s'|slice:':-2'|default:hd.tong_tien_thu }}" min="0" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="id_minh_chung">Link minh chứng (URL ảnh/drive)</label>
+                        <input type="url" class="form-control" name="minh_chung" id="id_minh_chung"
+                               value="{{ hd.minh_chung|default:'' }}">
+                        <div class="form-text">Google Drive, Dropbox, hoặc URL ảnh trực tiếp</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="id_ghi_chu">Ghi chú</label>
+                        <textarea class="form-control" name="ghi_chu" id="id_ghi_chu"
+                                  rows="3">{{ hd.ghi_chu|default:'' }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="d-flex gap-3">
+                <a href="{% url 'contract_list' %}" class="btn-honey-outline text-decoration-none px-4 py-2">
+                    Hủy
+                </a>
+                <button type="submit" class="btn-chot-sale flex-grow-1" id="submitBtn">
+                    <i class="fa-solid fa-save me-2"></i>Cập nhật hợp đồng
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Format tổng tiền
+    document.getElementById('id_tong_tien').addEventListener('input', function() {
+        const val = parseInt(this.value) || 0;
+        document.getElementById('tienFormat').textContent =
+            val > 0 ? new Intl.NumberFormat('vi-VN').format(val) + ' đ' : '';
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hồ sơ cá nhân — AlphaHome{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="ah-card p-4">
+            <h2 class="ah-section-title mb-4">
+                <i class="fa-solid fa-user-gear"></i> Hồ sơ cá nhân
+            </h2>
+            
+            <div class="text-center mb-4">
+                <div class="stat-icon honey mx-auto mb-2" style="width: 80px; height: 80px; font-size: 36px;">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <h4 class="mb-0">{{ profile.ho_ten }}</h4>
+                <span class="badge-status badge-honey mt-1">{{ profile.vai_tro }}</span>
+            </div>
+
+            <div class="list-group list-group-flush mb-4">
+                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <span class="text-muted"><i class="fa-solid fa-id-badge me-2"></i>Tên đăng nhập</span>
+                    <span class="fw-bold">{{ user.username }}</span>
+                </div>
+                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <span class="text-muted"><i class="fa-solid fa-phone me-2"></i>Số điện thoại</span>
+                    <span class="fw-bold">{{ profile.sdt|default:"Chưa cập nhật" }}</span>
+                </div>
+                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <span class="text-muted"><i class="fa-solid fa-briefcase me-2"></i>Chức vụ</span>
+                    <span class="fw-bold">{{ profile.chuc_vu|default:"Thành viên" }}</span>
+                </div>
+                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <span class="text-muted"><i class="fa-solid fa-calendar-day me-2"></i>Ngày tham gia</span>
+                    <span class="fw-bold">{{ user.date_joined|date:"d/m/Y" }}</span>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <a href="{% url 'password_change' %}" class="btn-honey-outline text-decoration-none text-center">
+                    <i class="fa-solid fa-key me-2"></i>Đổi mật khẩu bảo mật
+                </a>
+                <a href="{% url 'dashboard' %}" class="btn btn-light rounded-3">
+                    Quay lại Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Premium Hero Banner -->
+    <style>
+        .ah-hero-banner {
+            height: 300px;
+            background: #f8f9fa;
+        }
+        @media (max-width: 768px) {
+            .ah-hero-banner { height: 180px; }
+        }
+    </style>
+    <div class="ah-hero-banner mb-4 rounded-3 overflow-hidden shadow-sm position-relative">
+        <img src="{% static 'img/2df8d46e-24ec-4da1-802f-7fee1057a3ac_removalai_preview.png' %}" class="w-100 h-100"
+            style="object-fit: contain; background: #fff;" alt="AlphaHome Banner">
+        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+            style="background: rgba(0,0,0,0.02);">
+            <!-- Optional overlay content if needed -->
+        </div>
+    </div>
+
+    <!-- Khám phá danh mục -->
+    <div class="bg-white rounded-3 shadow-sm p-3 mb-4">
+        <h5 class="fw-bold mb-3 fs-6">Khám phá danh mục</h5>
+        <div class="row g-2 d-flex align-items-center justify-content-center">
+
+            <div class="col-3 col-md-2">
+                <a href="/products/" class="category-item">
+                    <div class="category-icon text-primary"><i class="fa-solid fa-key"></i></div>
+                    <span ,class="small fw-medium">Cho thuê</span>
+                </a>
+            </div>
+            <div class="col-3 col-md-2">
+                <a href="/projects/" class="category-item">
+                    <div class="category-icon text-success"><i class="fa-solid fa-city"></i></div>
+                    <span class="small fw-medium">Dự án</span>
+                </a>
+            </div>
+            <div class="col-3 col-md-2">
+                <a href="#" class="category-item">
+                    <div class="category-icon text-warning"><i class="fa-solid fa-handshake"></i></div>
+                    <span class="small fw-medium">Môi giới</span>
+                </a>
+            </div>
+            <div class="col-3 col-md-2 d-none d-md-block">
+                <a href="#" class="category-item">
+                    <div class="category-icon text-info"><i class="fa-solid fa-book-open"></i></div>
+                    <span class="small fw-medium">Cẩm nang</span>
+                </a>
+            </div>
+            <div class="col-3 col-md-2 d-none d-md-block">
+                <a href="#" class="category-item">
+                    <div class="category-icon text-secondary"><i class="fa-solid fa-ellipsis"></i></div>
+                    <span class="small fw-medium">Xem thêm</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tin đăng mới / Dành cho bạn -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Bất động sản dành cho bạn</h5>
+        <a href="/products/" class="text-primary text-decoration-none small fw-medium">Xem thêm <i
+                class="fa-solid fa-angle-right"></i></a>
+    </div>
+
+    <div class="row g-3 mb-5">
+        <!-- Card 1 -->
+        <div class="col-6 col-md-4 col-lg-3">
+            <a href="/product-detail/" class="text-decoration-none">
+                <div class="nhatot-card">
+                    <div class="nhatot-card-img">
+                        <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=500&q=80" alt="Căn hộ">
+                        <span class="badge-photo-count"><i class="fa-regular fa-image"></i> 5</span>
+                    </div>
+                    <div class="nhatot-card-body">
+                        <div class="card-title-2lines">Căn hộ dịch vụ cao cấp Full nội thất Quận 1, dọn vào ở ngay</div>
+                        <div class="card-meta">45 m² - 1 PN</div>
+                        <div class="card-price">8,5 triệu/tháng</div>
+                        <div class="card-meta"><i class="fa-solid fa-location-dot me-1"></i>Quận 1, TP Hồ Chí Minh</div>
+                        <div class="card-footer-info">
+                            <div><img src="https://static.chotot.com/storage/chotot-icons/svg/user.svg" width="12"
+                                    class="me-1">2 phút trước</div>
+                            <button class="btn-save-ad"><i class="fa-regular fa-heart"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="col-6 col-md-4 col-lg-3">
+            <a href="/product-detail/" class="text-decoration-none">
+                <div class="nhatot-card">
+                    <div class="nhatot-card-img">
+                        <img src="https://images.unsplash.com/photo-1502672260266-1c1de2d93688?w=500&q=80"
+                            alt="Phòng trọ">
+                        <span class="badge-photo-count"><i class="fa-regular fa-image"></i> 3</span>
+                    </div>
+                    <div class="nhatot-card-body">
+                        <div class="card-title-2lines">Phòng trọ có gác, ban công thoáng mát gần đại học Hutech</div>
+                        <div class="card-meta">25 m²</div>
+                        <div class="card-price">3,2 triệu/tháng</div>
+                        <div class="card-meta"><i class="fa-solid fa-location-dot me-1"></i>Bình Thạnh, TP.HCM</div>
+                        <div class="card-footer-info">
+                            <div><span class="badge-pro-seller"><i class="fa-solid fa-star me-1"></i>Pro</span> 15 phút
+                                trước</div>
+                            <button class="btn-save-ad"><i class="fa-regular fa-heart"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="col-6 col-md-4 col-lg-3">
+            <a href="/product-detail/" class="text-decoration-none">
+                <div class="nhatot-card">
+                    <div class="nhatot-card-img">
+                        <img src="https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=500&q=80" alt="Căn hộ">
+                        <span class="badge-photo-count"><i class="fa-solid fa-video"></i> 1</span>
+                    </div>
+                    <div class="nhatot-card-body">
+                        <div class="card-title-2lines">Cho thuê chung cư Vinhomes Central Park 2PN giá tốt nhất thị
+                            trường</div>
+                        <div class="card-meta">75 m² - 2 PN</div>
+                        <div class="card-price">18 triệu/tháng</div>
+                        <div class="card-meta"><i class="fa-solid fa-location-dot me-1"></i>Bình Thạnh, TP.HCM</div>
+                        <div class="card-footer-info">
+                            <div><span class="badge-pro-seller"><i class="fa-solid fa-star me-1"></i>Pro</span> 1 giờ
+                                trước</div>
+                            <button class="btn-save-ad"><i class="fa-regular fa-heart"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="col-6 col-md-4 col-lg-3">
+            <a href="/product-detail/" class="text-decoration-none">
+                <div class="nhatot-card">
+                    <div class="nhatot-card-img">
+                        <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80"
+                            alt="Nhà nguyên căn">
+                        <span class="badge-photo-count"><i class="fa-regular fa-image"></i> 8</span>
+                    </div>
+                    <div class="nhatot-card-body">
+                        <div class="card-title-2lines">Nhà nguyên căn mặt tiền kinh doanh sầm uất đường Lê Văn Sỹ</div>
+                        <div class="card-meta">100 m² - 3 PN</div>
+                        <div class="card-price">25 triệu/tháng</div>
+                        <div class="card-meta"><i class="fa-solid fa-location-dot me-1"></i>Phú Nhuận, TP.HCM</div>
+                        <div class="card-footer-info">
+                            <div><img src="https://static.chotot.com/storage/chotot-icons/svg/user.svg" width="12"
+                                    class="me-1">2 giờ trước</div>
+                            <button class="btn-save-ad"><i class="fa-regular fa-heart"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

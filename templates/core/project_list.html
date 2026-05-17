@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Dự án Bất Động Sản</li>
+        </ol>
+    </nav>
+
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Khám phá các Dự án Nổi bật</h2>
+        <p class="text-muted">Thông tin tổng hợp, đầy đủ về các dự án chung cư, khu đô thị mới nhất</p>
+    </div>
+
+    <!-- Search / Filter for Projects -->
+    <div class="card border-0 shadow-sm rounded-4 mb-5 p-4 bg-white">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <select class="form-select border-0 bg-light">
+                    <option>Chọn khu vực</option>
+                    <option>Hà Nội</option>
+                    <option>TP. Hồ Chí Minh</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select border-0 bg-light">
+                    <option>Trạng thái</option>
+                    <option>Đang mở bán</option>
+                    <option>Đang bàn giao</option>
+                    <option>Sắp ra mắt</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-warning w-100 fw-bold"><i class="fa-solid fa-magnifying-glass me-2"></i>Tìm Dự Án</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project List Grid -->
+    <div class="row g-4">
+        <!-- Project 1 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 project-card">
+                <div class="position-relative" style="height: 220px;">
+                    <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=500&q=80" alt="Vinhomes Grand Park" class="w-100 h-100 object-fit-cover">
+                    <span class="badge bg-danger position-absolute top-0 start-0 m-3 p-2">Đang mở bán</span>
+                </div>
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-2">Vinhomes Grand Park</h5>
+                    <p class="text-muted small mb-3"><i class="fa-solid fa-location-dot me-2"></i>Quận 9, TP.HCM</p>
+                    
+                    <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
+                        <div class="text-center">
+                            <div class="small text-muted mb-1">Giá từ</div>
+                            <div class="fw-bold text-danger">45 triệu/m²</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="small text-muted mb-1">Quy mô</div>
+                            <div class="fw-bold">271 ha</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="small text-muted mb-1">Bàn giao</div>
+                            <div class="fw-bold">2026</div>
+                        </div>
+                    </div>
+                    <a href="#" class="btn btn-outline-primary w-100 rounded-pill">Xem chi tiết</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project 2 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 project-card">
+                <div class="position-relative" style="height: 220px;">
+                    <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500&q=80" alt="Masteri Centre Point" class="w-100 h-100 object-fit-cover">
+                    <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-3 p-2">Sắp bàn giao</span>
+                </div>
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-2">Masteri Centre Point</h5>
+                    <p class="text-muted small mb-3"><i class="fa-solid fa-location-dot me-2"></i>Quận 9, TP.HCM</p>
+                    
+                    <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
+                        <div class="text-center">
+                            <div class="small text-muted mb-1">Giá từ</div>
+                            <div class="fw-bold text-danger">60 triệu/m²</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="small text-muted mb-1">Số lượng</div>
+                            <div class="fw-bold">5000 căn</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="small text-muted mb-1">Bàn giao</div>
+                            <div class="fw-bold">12/2026</div>
+                        </div>
+                    </div>
+                    <a href="#" class="btn btn-outline-primary w-100 rounded-pill">Xem chi tiết</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

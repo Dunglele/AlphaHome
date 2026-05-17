@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency %}
+
+{% block title %}Quản lý hợp đồng — AlphaHome{% endblock %}
+{% block active_contract %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;margin:0;">
+        <i class="fa-solid fa-file-contract me-2" style="color:var(--honey-primary);"></i>
+        Quản lý hợp đồng
+    </h1>
+    <div class="d-flex gap-2">
+        <span class="badge-status badge-pending">{{ cho_duyet }} Chờ duyệt</span>
+        <span class="badge-status badge-available">{{ da_duyet }} Đã duyệt</span>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="ah-filter-box mb-4">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label mb-1">Trạng thái</label>
+            <select class="form-select form-select-sm" name="tt" onchange="this.form.submit()">
+                <option value="">Tất cả</option>
+                <option value="CHO_DUYET" {% if request.GET.tt == 'CHO_DUYET' %}selected{% endif %}>Chờ duyệt</option>
+                <option value="DA_DUYET" {% if request.GET.tt == 'DA_DUYET' %}selected{% endif %}>Đã duyệt</option>
+                <option value="TU_CHOI" {% if request.GET.tt == 'TU_CHOI' %}selected{% endif %}>Từ chối</option>
+            </select>
+        </div>
+        {% if user.quanly %}
+        <div class="col-md-3">
+            <label class="form-label mb-1">Nhân viên</label>
+            <select class="form-select form-select-sm" name="nv" onchange="this.form.submit()">
+                <option value="">Tất cả nhân viên</option>
+                {% for nv in nhan_vien_list %}
+                <option value="{{ nv.pk }}" {% if request.GET.nv == nv.pk|stringformat:'s' %}selected{% endif %}>
+                    {{ nv.ho_ten }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        <div class="col-md-3">
+            <label class="form-label mb-1">Từ ngày</label>
+            <input type="date" class="form-control form-control-sm" name="tu_ngay"
+                   value="{{ request.GET.tu_ngay }}">
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn-honey px-3 py-1 flex-grow-1" style="font-size:13px;">
+                <i class="fa-solid fa-filter me-1"></i> Lọc
+            </button>
+            {% if request.GET %}
+            <a href="{% url 'contract_list' %}" class="btn btn-sm btn-outline-secondary rounded-2">
+                <i class="fa-solid fa-xmark"></i>
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Table -->
+<div class="ah-table">
+    <table class="table mb-0">
+        <thead>
+            <tr>
+                <th>Mã HĐ</th>
+                <th>Phòng / Căn hộ</th>
+                <th>Khách hàng</th>
+                <th>Nhân viên</th>
+                <th>Ngày lập</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th class="text-center">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for hd in page_obj %}
+            <tr>
+                <td class="fw-semibold" style="color:var(--honey-dark);">HĐ-{{ hd.pk|stringformat:"04d" }}</td>
+                <td>
+                    <a href="{% url 'contract_detail' hd.pk %}" class="text-decoration-none fw-semibold">
+                        {{ hd.can_ho.ten_ch|truncatechars:35 }}
+                    </a>
+                </td>
+                <td>
+                    <div class="fw-medium">{{ hd.khach_hang.ho_ten }}</div>
+                    <div style="font-size:12px;color:var(--text-muted);">{{ hd.khach_hang.so_dien_thoai }}</div>
+                </td>
+                <td style="font-size:13px;">{{ hd.nhan_vien.ho_ten|default:"Quản lý" }}</td>
+                <td style="font-size:13px;">{{ hd.ngay_lap|date:"d/m/Y" }}</td>
+                <td class="fw-semibold" style="color:var(--price-color);">
+                    {{ hd.tong_tien_thu|currency }}
+                </td>
+                <td>
+                    {% if hd.trang_thai == 'CHO_DUYET' %}
+                    <span class="badge-status badge-pending">Chờ duyệt</span>
+                    {% elif hd.trang_thai == 'DA_DUYET' %}
+                    <span class="badge-status badge-available">Đã duyệt</span>
+                    {% else %}
+                    <span class="badge-status badge-rented">Từ chối</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <div class="d-flex justify-content-center gap-1">
+                        <a href="{% url 'contract_detail' hd.pk %}" class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
+                            <i class="fa-solid fa-eye"></i>
+                        </a>
+                        {% if user.quanly and hd.trang_thai == 'CHO_DUYET' %}
+                        <form action="{% url 'contract_approve' hd.pk %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success" title="Phê duyệt">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-file-circle-xmark fs-1 mb-2" style="opacity:.3;"></i>
+                    <p class="mb-0">Không có hợp đồng nào.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav class="d-flex justify-content-center mt-3">
+    <ul class="pagination pagination-sm gap-1">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="fa-solid fa-chevron-left"></i></a></li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}"><i class="fa-solid fa-chevron-right"></i></a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency %}
+
+{% block title %}Chi tiết hợp đồng HĐ-{{ hd.pk|stringformat:"04d" }} — AlphaHome{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'contract_list' %}" class="text-decoration-none text-muted mb-2 d-inline-block">
+        <i class="fa-solid fa-arrow-left me-1"></i> Quay lại danh sách
+    </a>
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 style="font-family:'Nunito',sans-serif;font-size:24px;font-weight:900;margin:0;">
+            Hợp đồng HĐ-{{ hd.pk|stringformat:"04d" }}
+        </h1>
+        <div>
+            {% if hd.trang_thai == 'CHO_DUYET' %}
+            <span class="badge-status badge-pending">Chờ duyệt</span>
+            {% elif hd.trang_thai == 'DA_DUYET' %}
+            <span class="badge-status badge-available">Đã duyệt</span>
+            {% else %}
+            <span class="badge-status badge-rented">Từ chối</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Cột trái: Thông tin chính -->
+    <div class="col-lg-8">
+        <!-- Thông tin phòng -->
+        <div class="ah-panel mb-4">
+            <div class="ah-panel-title"><i class="fa-solid fa-house-circle-check"></i> Thông tin Phòng / Căn hộ</div>
+            <div class="d-flex gap-3">
+                {% if hd.can_ho.anh_chinh %}
+                <img src="{{ hd.can_ho.anh_chinh.link_anh }}" class="rounded-3" style="width:120px; height:120px; object-fit:cover;">
+                {% endif %}
+                <div>
+                    <h5 class="mb-1"><a href="{% url 'product_detail' hd.can_ho.pk %}" class="text-decoration-none">{{ hd.can_ho.ten_ch }}</a></h5>
+                    <p class="text-muted mb-2" style="font-size:14px;"><i class="fa-solid fa-location-dot me-1"></i> {{ hd.can_ho.dia_chi.dia_chi_day_du }}</p>
+                    <div class="fw-bold" style="color:var(--price-color); font-size:18px;">{{ hd.can_ho.gia|currency }} / tháng</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin khách hàng -->
+        <div class="ah-panel mb-4">
+            <div class="ah-panel-title"><i class="fa-solid fa-user-tie"></i> Thông tin Khách hàng</div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="text-muted small d-block">Họ và tên</label>
+                    <div class="fw-bold">{{ hd.khach_hang.ho_ten }}</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="text-muted small d-block">Số điện thoại</label>
+                    <div class="fw-bold">{{ hd.khach_hang.so_dien_thoai }}</div>
+                </div>
+                <div class="col-md-12">
+                    <label class="text-muted small d-block">Email</label>
+                    <div class="fw-bold">{{ hd.khach_hang.email|default:"Chưa cung cấp" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Minh chứng -->
+        {% if hd.minh_chung %}
+        <div class="ah-panel">
+            <div class="ah-panel-title"><i class="fa-solid fa-receipt"></i> Minh chứng giao dịch</div>
+            {% if ".pdf" in hd.minh_chung %}
+            <div class="alert alert-info">
+                <i class="fa-solid fa-file-pdf me-2"></i> Tệp minh chứng là PDF. 
+                <a href="{{ hd.minh_chung }}" target="_blank" class="btn btn-sm btn-primary ms-3">Xem / Tải về</a>
+            </div>
+            {% else %}
+            <div class="text-center">
+                <img src="{{ hd.minh_chung }}" class="img-fluid rounded-3 border" style="max-height:500px;" alt="Minh chứng">
+                <div class="mt-2">
+                    <a href="{{ hd.minh_chung }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                        <i class="fa-solid fa-magnifying-glass-plus"></i> Xem ảnh gốc
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Cột phải: Chi tiết thanh toán & Hành động -->
+    <div class="col-lg-4">
+        <div class="ah-panel mb-4">
+            <div class="ah-panel-title"><i class="fa-solid fa-money-bill-transfer"></i> Chi tiết thanh toán</div>
+            <div class="mb-3">
+                <label class="text-muted small d-block">Tổng tiền đã thu</label>
+                <div class="fw-bold text-success" style="font-size:22px;">{{ hd.tong_tien_thu|currency }}</div>
+            </div>
+            <div class="mb-3">
+                <label class="text-muted small d-block">Ngày lập hợp đồng</label>
+                <div class="fw-medium">{{ hd.ngay_lap|date:"d/m/Y" }}</div>
+            </div>
+            <div class="mb-3">
+                <label class="text-muted small d-block">Nhân viên thực hiện</label>
+                <div class="fw-medium">{{ hd.nhan_vien.ho_ten|default:"Quản lý" }}</div>
+            </div>
+            {% if hd.ghi_chu %}
+            <div class="mb-0">
+                <label class="text-muted small d-block">Ghi chú</label>
+                <div class="p-2 bg-light rounded small italic">{{ hd.ghi_chu }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Hành động cho Admin -->
+        {% if user.quanly and hd.trang_thai == 'CHO_DUYET' %}
+        <div class="ah-panel border-warning bg-light">
+            <div class="ah-panel-title text-warning"><i class="fa-solid fa-shield-check"></i> Phê duyệt</div>
+            <div class="d-grid gap-2">
+                <form action="{% url 'contract_approve' hd.pk %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success w-100 mb-2">
+                        <i class="fa-solid fa-check me-1"></i> Phê duyệt ngay
+                    </button>
+                </form>
+                <form action="{% url 'contract_reject' hd.pk %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Bạn có chắc chắn muốn từ chối hợp đồng này?')">
+                        <i class="fa-solid fa-xmark me-1"></i> Từ chối hợp đồng
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

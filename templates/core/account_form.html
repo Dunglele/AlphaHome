@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Sửa tài khoản — AlphaHome{% else %}Thêm tài khoản — AlphaHome{% endif %}{% endblock %}
+{% block active_account %}active{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{% url 'account_list' %}" class="btn btn-sm btn-outline-secondary rounded-3">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <h1 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;margin:0;">
+                {% if is_edit %}Chỉnh sửa tài khoản: {{ u.username }}{% else %}Thêm tài khoản mới{% endif %}
+            </h1>
+        </div>
+
+        <form method="post" class="ah-panel">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="username">Tên đăng nhập <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="username" id="username" value="{{ u.username|default:'' }}" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="password">Mật khẩu {% if not is_edit %}<span class="text-danger">*</span>{% endif %}</label>
+                    <input type="password" class="form-control" name="password" id="password" {% if not is_edit %}required{% endif %}>
+                    {% if is_edit %}
+                    <div class="form-text text-muted" style="font-size: 11px; margin-top: 4px;">Để trống nếu giữ nguyên mật khẩu cũ</div>
+                    {% endif %}
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="ho_ten">Họ và tên <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="ho_ten" id="ho_ten" 
+                           value="{% if u.quanly %}{{ u.quanly.ho_ten }}{% elif u.nhanvien %}{{ u.nhanvien.ho_ten }}{% endif %}" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="sdt">Số điện thoại <span class="text-danger">*</span></label>
+                    <input type="tel" class="form-control" name="sdt" id="sdt" 
+                           value="{% if u.quanly %}{{ u.quanly.so_dien_thoai }}{% elif u.nhanvien %}{{ u.nhanvien.so_dien_thoai }}{% endif %}" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="vai_tro">Vai trò <span class="text-danger">*</span></label>
+                    <select class="form-select" name="vai_tro" id="vai_tro" required>
+                        <option value="NHAN_VIEN" {% if is_edit and not u.quanly %}selected{% endif %}>Nhân viên Sale</option>
+                        <option value="QUAN_LY" {% if is_edit and u.quanly %}selected{% endif %}>Quản lý</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 mt-4">
+                <a href="{% url 'account_list' %}" class="btn-honey-outline text-decoration-none px-4 py-2">Hủy</a>
+                <button type="submit" class="btn-honey flex-grow-1 py-2">
+                    {% if is_edit %}
+                    <i class="fa-solid fa-floppy-disk me-2"></i>Lưu thay đổi
+                    {% else %}
+                    <i class="fa-solid fa-user-plus me-2"></i>Tạo tài khoản
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

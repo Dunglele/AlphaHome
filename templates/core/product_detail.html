@@ -1,0 +1,545 @@
+{% extends 'base.html' %}
+{% load currency %}
+{% load static %}
+
+{% block title %}{{ phong.ten_ch }} — AlphaHome{% endblock %}
+{% block extra_head %}
+<style>
+    /* Carousel Arrow Prominence */
+    .carousel-control-prev, .carousel-control-next {
+        width: 45px;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        top: 50%;
+        transform: translateY(-50%);
+        margin: 0 15px;
+        opacity: 0;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+    #productCarousel:hover .carousel-control-prev, 
+    #productCarousel:hover .carousel-control-next {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.8);
+    }
+    .carousel-control-prev-icon, .carousel-control-next-icon {
+        filter: invert(1) grayscale(100) brightness(0);
+        width: 20px;
+        height: 20px;
+    }
+    .carousel-control-prev:hover, .carousel-control-next:hover {
+        background: white !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    /* Thumbnails Section */
+    .thumb-container {
+        display: flex;
+        gap: 8px;
+        padding: 10px 0;
+        overflow-x: auto;
+        scrollbar-width: none; /* Firefox */
+    }
+    .thumb-container::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+    
+    .thumb-item {
+        width: 80px;
+        height: 60px;
+        flex-shrink: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+        opacity: 0.6;
+        object-fit: cover;
+    }
+    .thumb-item:hover { opacity: 1; }
+    .thumb-item.active {
+        border-color: var(--honey-primary);
+        opacity: 1;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    /* Responsive Mobile adjustments */
+    @media (max-width: 991.98px) {
+        .carousel-control-prev, .carousel-control-next {
+            opacity: 0.85 !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+        }
+    }
+    @media (max-width: 575.98px) {
+        .carousel-inner {
+            height: 260px !important;
+        }
+        .carousel-control-prev, .carousel-control-next {
+            width: 36px !important;
+            height: 36px !important;
+            margin: 0 5px !important;
+        }
+        .carousel-control-prev-icon, .carousel-control-next-icon {
+            width: 16px;
+            height: 16px;
+        }
+        .thumb-item {
+            width: 60px;
+            height: 45px;
+        }
+    }
+
+    /* Related Products Horizontal Scroll on Mobile */
+    @media (max-width: 767.98px) {
+        .row-related-carousel {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            scroll-snap-type: x mandatory !important;
+            padding-bottom: 12px !important;
+            margin-left: -12px !important;
+            margin-right: -12px !important;
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+            scrollbar-width: none !important; /* Hide Firefox */
+        }
+        .row-related-carousel::-webkit-scrollbar {
+            display: none !important; /* Hide Chrome/Safari */
+        }
+        .col-related-card {
+            flex: 0 0 85% !important;
+            max-width: 85% !important;
+            scroll-snap-align: start !important;
+        }
+        /* Override inline styles for horizontal-to-vertical card card on mobile */
+        .row-related-carousel .ah-list-card {
+            flex-direction: column !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+        }
+        .row-related-carousel .ah-list-card-img {
+            width: 100% !important;
+            height: 180px !important;
+        }
+        .row-related-carousel .ah-list-card-body {
+            padding: 12px !important;
+        }
+    }
+</style>
+{% endblock %}
+{% block active_product_list %}active{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-muted">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'product_list' %}" class="text-decoration-none text-muted">Danh sách phòng</a></li>
+        <li class="breadcrumb-item active">{{ phong.ten_ch|truncatechars:40 }}</li>
+    </ol>
+</nav>
+
+<!-- TOP HERO BOX -->
+<div class="ah-panel p-3 p-md-4 mb-4 shadow-sm">
+    <div class="row g-4">
+        <!-- Left: Image Carousel -->
+        <div class="col-lg-6">
+            <div id="productCarousel" class="carousel slide rounded-3 overflow-hidden shadow-sm" data-bs-interval="false" 
+                 style="background: rgba(252, 250, 242, 0.6); backdrop-filter: blur(8px);">
+                <div class="carousel-inner" style="height: 350px; height: clamp(300px, 50vh, 500px);">
+                    {% for anh in anh_list %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %} h-100">
+                        <img src="{{ anh.link_anh }}" class="d-block w-100 h-100"
+                             style="object-fit:contain;" alt="Hình {{ forloop.counter }}">
+                    </div>
+                    {% empty %}
+                    <div class="carousel-item active h-100 d-flex align-items-center justify-content-center"
+                         style="background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);">
+                        <div class="text-center">
+                            <div class="mb-3" style="font-size: 64px; color: #ced4da; opacity: 0.8;">
+                                <i class="fa-solid fa-cloud-sun"></i>
+                            </div>
+                            <h5 class="fw-bold text-muted" style="font-family:'Nunito',sans-serif;">Không gian đang được cập nhật</h5>
+                            <p class="text-muted small">Vui lòng liên hệ quản lý để xem ảnh trực tiếp</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if anh_list.count > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+                {% endif %}
+                <div class="position-absolute bottom-0 end-0 m-2" style="z-index: 5;">
+                    <span class="badge-photo"><i class="fa-solid fa-camera"></i> {{ anh_list.count }} ảnh</span>
+                </div>
+            </div>
+
+            <!-- Thumbnails Preview -->
+            {% if anh_list.count > 1 %}
+            <div class="thumb-container mt-2">
+                {% for anh in anh_list %}
+                <img src="{{ anh.link_anh }}" class="thumb-item {% if forloop.first %}active{% endif %}" 
+                     onclick="goToSlide({{ forloop.counter0 }})" alt="Thumbnail {{ forloop.counter }}">
+                {% endfor %}
+            </div>
+            {% endif %}
+            </div>
+
+        <!-- Right: Info + Action Box -->
+        <div class="col-lg-6 d-flex flex-column">
+            <!-- Title and Status -->
+            <div class="mb-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    {% if phong.trang_thai == 'TRONG' %}
+                    <span class="badge-status badge-available"><i class="fa-solid fa-circle" style="font-size:8px;"></i> Còn trống</span>
+                    {% elif phong.trang_thai == 'CHO_DUYET' %}
+                    <span class="badge-status badge-pending"><i class="fa-solid fa-clock" style="font-size:8px;"></i> Chờ duyệt</span>
+                    {% else %}
+                    <span class="badge-status badge-rented"><i class="fa-solid fa-lock" style="font-size:8px;"></i> Đã thuê</span>
+                    {% endif %}
+                    <span class="badge-status badge-honey">{{ phong.get_loai_phong_display }}</span>
+                </div>
+                
+                <h1 class="fs-5 fw-bold mb-2" style="line-height:1.4;">{{ phong.ten_ch }}</h1>
+                
+                <div style="font-family:'Nunito',sans-serif;font-size:28px;font-weight:900;color:var(--price-color);" class="mb-2">
+                    {{ phong.gia|currency }}
+                </div>
+                
+                {% if phong.dia_chi %}
+                <div class="text-muted small">
+                    <i class="fa-solid fa-location-dot" style="color:var(--honey-primary);"></i>
+                    {{ phong.dia_chi.dia_chi_day_du }}
+                </div>
+                {% endif %}
+            </div>
+
+            <hr class="text-muted my-2">
+
+            <!-- Action Box (Chốt Sale) -->
+            <div class="mb-3">
+                <div class="d-flex align-items-center gap-3 mb-3 mt-2">
+                    <div style="width:45px;height:45px;border-radius:12px;background:var(--honey-amber);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--honey-dark);">
+                        <i class="fa-solid fa-handshake"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Chốt Sale</h6>
+                        <p class="text-muted mb-0" style="font-size:12px;">Tạo hợp đồng ngay</p>
+                    </div>
+                </div>
+
+                {% if phong.trang_thai == 'TRONG' %}
+                <a href="{% url 'sale_form' phong.pk %}" class="btn-chot-sale w-100 text-decoration-none text-center d-block mb-3">
+                    <i class="fa-solid fa-file-signature me-2"></i>Chốt Sale Ngay
+                </a>
+                {% elif phong.trang_thai == 'CHO_DUYET' %}
+                <div class="alert mb-3" style="background:var(--status-pending-bg);color:var(--status-pending);border:none;border-radius:10px;font-size:13px;">
+                    <i class="fa-solid fa-clock me-1"></i>
+                    Phòng đang chờ quản lý duyệt hợp đồng.
+                </div>
+                {% elif phong.trang_thai == 'DA_THUE' %}
+                <div class="alert mb-3" style="background:var(--status-rented-bg);color:var(--status-rented);border:none;border-radius:10px;font-size:13px;">
+                    <i class="fa-solid fa-lock me-1"></i>
+                    Phòng đã được thuê.
+                </div>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    <button onclick="downloadAllImages()" class="btn btn-outline-dark flex-grow-1" style="font-size:14px; font-weight:600; border-radius:10px; height: 42px;">
+                        <i class="fa-solid fa-download me-1"></i> Tải ảnh
+                    </button>
+                    <button onclick="copyDescription()" class="btn btn-outline-dark flex-grow-1" style="font-size:14px; font-weight:600; border-radius:10px; height: 42px;">
+                        <i class="fa-solid fa-copy me-1"></i> Copy tin
+                    </button>
+                </div>
+
+                {% if user.quanly %}
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'product_edit' phong.pk %}" class="btn btn-outline-warning rounded-3 fw-semibold">
+                        <i class="fa-solid fa-pen me-2"></i>Chỉnh sửa
+                    </a>
+                    <form action="{% url 'product_delete' phong.pk %}" method="post" id="deleteForm" class="d-grid">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-outline-danger rounded-3 fw-semibold" onclick="confirmDelete()">
+                            <i class="fa-solid fa-trash me-2"></i>Xóa phòng
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Support Contact -->
+            <div class="mt-auto p-3 rounded-3" style="background:var(--honey-bg);border:1px solid var(--honey-amber);">
+                <div class="fw-semibold mb-1" style="font-size:13px;">
+                    <i class="fa-solid fa-headset me-1" style="color:var(--honey-primary);"></i>
+                    Liên hệ hỗ trợ
+                </div>
+                <p class="text-muted mb-0" style="font-size:12px;">
+                    Gặp vấn đề? Liên hệ quản lý để được hỗ trợ.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BOTTOM SECTION -->
+<div class="row g-4">
+    <!-- Meta and Description -->
+    <div class="col-lg-8">
+        <div class="ah-panel mb-4 shadow-sm">
+            <h5 class="fw-bold mb-3" style="font-size:16px;">Thông tin chi tiết</h5>
+            <div class="row g-3">
+                {% if phong.dien_tich %}
+                <div class="col-sm-6">
+                    <div class="d-flex align-items-center gap-2 border rounded-3 p-2 small">
+                        <i class="fa-solid fa-expand text-muted"></i>
+                        <span class="text-muted">Diện tích:</span>
+                        <span class="fw-semibold">{{ phong.dien_tich }} m²</span>
+                    </div>
+                </div>
+                {% endif %}
+                {% if phong.chuyen_muc %}
+                <div class="col-sm-6">
+                    <div class="d-flex align-items-center gap-2 border rounded-3 p-2 small">
+                        <i class="fa-solid fa-tag text-muted"></i>
+                        <span class="text-muted">Chuyên mục:</span>
+                        <span class="fw-semibold">{{ phong.chuyen_muc.ten_cm }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="col-sm-6">
+                    <div class="d-flex align-items-center gap-2 border rounded-3 p-2 small">
+                        <i class="fa-regular fa-calendar text-muted"></i>
+                        <span class="text-muted">Ngày đăng:</span>
+                        <span class="fw-semibold">{{ phong.ngay_tao|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ah-panel mb-4 shadow-sm">
+            <h5 class="fw-bold mb-3" style="font-size:16px;">Mô tả</h5>
+            <div class="text-dark" style="white-space:pre-line;line-height:1.7;font-size:14px;">
+                {{ phong.mo_ta|default:"Không có mô tả." }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Column (4 units) -->
+    <div class="col-lg-4">
+        <!-- Contract History (Manager Only) -->
+        {% if user.quanly and hop_dong_list %}
+        <div class="ah-panel shadow-sm mb-4">
+            <div class="ah-panel-title" style="font-size:16px;"><i class="fa-solid fa-file-contract"></i> Lịch sử hợp đồng</div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0" style="font-size:13px; white-space: nowrap;">
+                    <thead style="background:var(--honey-amber);color:var(--honey-dark);">
+                        <tr>
+                            <th>Mã HĐ</th><th>Khách hàng</th><th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hd in hop_dong_list %}
+                        <tr>
+                            <td>HĐ-{{ hd.pk|stringformat:"04d" }}</td>
+                            <td>{{ hd.khach_hang.ho_ten }}</td>
+                            <td>
+                                {% if hd.trang_thai == 'CHO_DUYET' %}
+                                <span class="badge-status badge-pending">Chờ duyệt</span>
+                                {% elif hd.trang_thai == 'DA_DUYET' %}
+                                <span class="badge-status badge-available">Đã duyệt</span>
+                                {% else %}
+                                <span class="badge-status badge-rented">Từ chối</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Related Product (Primary Suggestion) -->
+        {% if related_phong %}
+        <div class="ah-panel mb-4 shadow-sm border-0" style="background: #fff9f0;">
+            <h6 class="fw-bold mb-3 d-flex align-items-center gap-2" style="font-size:14px; color:var(--honey-dark);">
+                <i class="fa-solid fa-star"></i> Gợi ý cùng khu vực
+            </h6>
+            {% with related_phong|first as first_rp %}
+            <a href="{% url 'product_detail' first_rp.pk %}" class="text-decoration-none d-block">
+                <div class="ah-card shadow-sm border-0 bg-white overflow-hidden" style="border-radius: 12px; transition: transform 0.2s;">
+                    <div class="ah-card-img" style="padding-top: 60%;">
+                        {% with first_rp.anh_set.first as anh %}
+                        {% if anh %}
+                        <img src="{{ anh.link_anh }}" alt="{{ first_rp.ten_ch }}">
+                        {% else %}
+                        <div class="ah-card-img-placeholder">
+                            <i class="fa-solid fa-image"></i>
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="ah-card-body p-3">
+                        <div class="ah-card-title fw-bold mb-1" style="font-size:15px;">{{ first_rp.ten_ch }}</div>
+                        <div class="ah-card-price mb-2" style="font-size:16px;">{{ first_rp.gia_format }}</div>
+                        <div class="ah-card-meta" style="font-size:12px;">
+                            <i class="fa-solid fa-location-dot"></i> {{ first_rp.dia_chi.quan|default:'' }}
+                        </div>
+                        <div class="mt-3">
+                            <span class="btn btn-sm btn-honey w-100 rounded-pill py-2" style="font-size:12px;">Xem ngay</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endwith %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if related_phong|length > 1 %}
+<div class="mt-5 pt-4 border-top">
+    <h5 class="fw-bold mb-4 d-flex align-items-center gap-2" style="font-family:'Nunito',sans-serif;">
+        <i class="fa-solid fa-layer-group" style="color:var(--honey-primary);"></i>
+        Các lựa chọn khác cùng khu vực
+    </h5>
+    <div class="row g-3 row-related-carousel">
+        {% for rp in related_phong %}
+        {% if not forloop.first %}
+        <div class="col-md-6 col-xl-4 col-related-card">
+            <a href="{% url 'product_detail' rp.pk %}" class="text-decoration-none d-block">
+                <div class="ah-list-card shadow-sm h-100" style="padding: 10px; min-height: 110px; border: 1px solid #eee;">
+                    <div class="ah-list-card-img" style="width: 100px; border-radius: 8px;">
+                        {% with rp.anh_set.first as anh %}
+                        {% if anh %}
+                        <img src="{{ anh.link_anh }}" alt="{{ rp.ten_ch }}">
+                        {% else %}
+                        <div style="width:100%;height:100%;background:var(--honey-amber);display:flex;align-items:center;justify-content:center;color:var(--honey-dark);font-size:20px;">
+                            <i class="fa-solid fa-image"></i>
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="ah-list-card-body" style="padding-left: 12px; gap: 4px;">
+                        <div class="ah-card-title" style="font-size:13px;-webkit-line-clamp:2; margin-bottom:0;">{{ rp.ten_ch }}</div>
+                        <div class="ah-card-price" style="font-size:14px; margin-bottom:0;">{{ rp.gia_format }}</div>
+                        <div class="ah-card-meta" style="font-size:11px;">
+                            <i class="fa-solid fa-location-dot"></i> {{ rp.dia_chi.quan|default:'' }}
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Footer Info Box -->
+<div class="ah-panel mt-5 shadow-sm border-0 bg-light p-3 rounded-4">
+    <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+        <div class="d-flex align-items-center gap-2 text-dark fw-bold" style="font-size:14px; min-width: 120px;">
+            <i class="fa-solid fa-circle-info text-primary"></i> LƯU Ý QUAN TRỌNG
+        </div>
+        <div class="vr d-none d-md-block mx-2"></div>
+        <ul class="d-flex flex-wrap gap-x-4 gap-y-2 mb-0 text-muted list-unstyled" style="font-size:13px;">
+            <li class="me-4"><i class="fa-solid fa-check-circle me-1 text-success"></i>Kiểm tra kỹ hợp đồng trước khi ký kết.</li>
+            <li class="me-4"><i class="fa-solid fa-check-circle me-1 text-success"></i>Yêu cầu đầy đủ minh chứng thu tiền khách hàng.</li>
+            <li><i class="fa-solid fa-check-circle me-1 text-success"></i>Ảnh chụp thực tế & rõ nét sẽ giúp tăng tỷ lệ chốt sale.</li>
+        </ul>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function downloadAllImages() {
+        const images = [
+            {% for anh in anh_list %}
+            "{{ anh.link_anh }}",
+            {% endfor %}
+        ];
+        if (images.length === 0) {
+            alert("Phòng này chưa có ảnh.");
+            return;
+        }
+        let count = 0;
+        images.forEach((url, index) => {
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const urlObj = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = urlObj;
+                    a.download = `phong_${"{{ phong.pk }}"}_anh_${index + 1}.jpg`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(urlObj);
+                    count++;
+                })
+                .catch(err => console.error('Error downloading image', err));
+        });
+    }
+
+    function copyDescription() {
+        const title = "{{ phong.ten_ch|escapejs }}";
+        const price = "{{ phong.gia_format|escapejs }}";
+        const area = "{{ phong.dien_tich|default:'Đang cập nhật' }} m2";
+        const address = "{{ phong.dia_chi.dia_chi_day_du|default:''|escapejs }}";
+        const description = "{{ phong.mo_ta|default:''|escapejs }}";
+        
+        const textToCopy = `*${title}*\n- Giá: ${price}\n- Diện tích: ${area}\n- Địa chỉ: ${address}\n\nMô tả chi tiết:\n${description}`;
+        
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert("Đã copy mô tả!");
+        }).catch(err => {
+            console.error('Lỗi khi copy', err);
+            alert("Trình duyệt không hỗ trợ copy tự động. Vui lòng copy thủ công.");
+        });
+    }
+
+    function confirmDelete() {
+        if (confirm("Bạn có chắc chắn muốn xóa phòng này? Thao tác này không thể hoàn tác.")) {
+            document.getElementById('deleteForm').submit();
+        }
+    }
+
+    // Carousel & Thumbnails sync
+    const productCarousel = document.getElementById('productCarousel');
+    if (productCarousel) {
+        const bsCarousel = bootstrap.Carousel.getOrCreateInstance(productCarousel);
+        
+        window.goToSlide = function(index) {
+            bsCarousel.to(index);
+        };
+
+        productCarousel.addEventListener('slide.bs.carousel', function (e) {
+            const index = e.to;
+            const thumbs = document.querySelectorAll('.thumb-item');
+            const container = document.querySelector('.thumb-container');
+            thumbs.forEach((thumb, i) => {
+                if (i === index) {
+                    thumb.classList.add('active');
+                    if (container) {
+                        const containerWidth = container.clientWidth;
+                        const thumbLeft = thumb.offsetLeft;
+                        const thumbWidth = thumb.clientWidth;
+                        container.scrollTo({
+                            left: thumbLeft - (containerWidth / 2) + (thumbWidth / 2),
+                            behavior: 'smooth'
+                        });
+                    }
+                } else {
+                    thumb.classList.remove('active');
+                }
+            });
+        });
+    }
+</script>
+{% endblock %}

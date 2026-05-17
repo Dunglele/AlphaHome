@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load currency %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+    <div>
+        <h1 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;margin-bottom:2px;">
+            Xin chào, {% if user.quanly %}{{ user.quanly.ho_ten }}{% elif user.nhanvien %}{{ user.nhanvien.ho_ten }}{% else %}{{ user.get_full_name|default:user.username }}{% endif %} 👋
+        </h1>
+        <p class="text-muted mb-0" style="font-size:13px;">
+            {% now "l, d/m/Y" %} — Hệ thống quản lý AlphaHome
+        </p>
+    </div>
+    {% if not user.quanly %}
+    <a href="hop-dong/?tt=CHO_DUYET" class="btn-honey d-flex align-items-center gap-2 text-decoration-none" 
+       style="white-space: nowrap; font-size: 13px; padding: 6px 14px; border-radius: 8px;">
+        <i class="fa-solid fa-hand-holding-dollar"></i> Chốt Sale
+    </a>
+    {% endif %}
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-2">
+        <div class="stat-card h-100">
+            <div class="stat-icon honey"><i class="fa-solid fa-building"></i></div>
+            <div class="d-flex flex-column justify-content-center">
+                <div class="stat-value">{{ total_phong }}</div>
+                <div class="stat-label">Sản phẩm</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-2">
+        <div class="stat-card h-100">
+            <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="d-flex flex-column justify-content-center">
+                <div class="stat-value" style="color:var(--status-available);">{{ phong_trong }}</div>
+                <div class="stat-label">Còn trống</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-2">
+        <a href="{% url 'contract_list' %}?tt=CHO_DUYET" class="text-decoration-none text-dark h-100 d-block">
+            <div class="stat-card h-100">
+                <div class="stat-icon orange"><i class="fa-solid fa-clock"></i></div>
+                <div class="d-flex flex-column justify-content-center">
+                    <div class="stat-value" style="color:var(--status-pending);">{{ phong_cho_duyet }}</div>
+                    <div class="stat-label">Chờ duyệt</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-xl-2">
+        <div class="stat-card h-100">
+            <div class="stat-icon gray"><i class="fa-solid fa-door-closed"></i></div>
+            <div class="d-flex flex-column justify-content-center">
+                <div class="stat-value" style="color:var(--status-rented);">{{ phong_da_thue }}</div>
+                <div class="stat-label">Đã thuê</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-4">
+        <div class="stat-card h-100"
+            style="background: linear-gradient(135deg, var(--honey-dark), #1a1a1a); color: white; border: none;">
+            <div class="stat-icon" style="background: rgba(255,193,7,0.2); color: var(--honey-primary);"><i
+                    class="fa-solid fa-hand-holding-dollar"></i></div>
+            <div class="d-flex flex-column justify-content-center">
+                <div class="stat-value" style="color: var(--honey-primary); font-size: 22px;">
+                    {% if user.quanly %}
+                    {{ revenue_all|currency }}
+                    {% else %}
+                    {{ revenue_personal|currency }}
+                    {% endif %}
+                </div>
+                <div class="stat-label" style="color: rgba(255,255,255,0.7);">
+                    {% if user.quanly %}Tổng doanh thu hệ thống{% else %}Doanh thu cá nhân{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Products Section -->
+<div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+    <h2 class="ah-section-title mb-0">
+        <i class="fa-solid fa-fire" style="color:var(--honey-primary);"></i>
+        Sản phẩm mới nhất
+    </h2>
+    <a href="{% url 'product_list' %}" class="btn-honey-outline text-decoration-none"
+        style="font-size:13px;padding:6px 16px;">
+        Xem tất cả <i class="fa-solid fa-arrow-right ms-1"></i>
+    </a>
+</div>
+
+<div class="row g-3">
+    {% for phong in san_pham_moi %}
+    <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+        <div class="ah-card h-100">
+            <a href="{% url 'product_detail' phong.pk %}" class="text-decoration-none">
+                <div class="ah-card-img">
+                    {% if phong.anh_chinh %}
+                    <img src="{{ phong.anh_chinh.link_anh }}" alt="{{ phong.ten_ch }}" loading="lazy">
+                    {% else %}
+                    <div class="ah-card-img-placeholder">
+                        <i class="fa-solid fa-image"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Status badge -->
+                    <div style="position:absolute;top:10px;right:10px;z-index:2;">
+                        {% if phong.trang_thai == 'TRONG' %}
+                        <span class="badge-status badge-available shadow-sm"><i class="fa-solid fa-circle"
+                                style="font-size:7px;"></i> Còn trống</span>
+                        {% elif phong.trang_thai == 'CHO_DUYET' %}
+                        <span class="badge-status badge-pending shadow-sm"><i class="fa-solid fa-clock"
+                                style="font-size:7px;"></i> Chờ duyệt</span>
+                        {% else %}
+                        <span class="badge-status badge-rented shadow-sm"><i class="fa-solid fa-lock" style="font-size:7px;"></i>
+                            Đã thuê</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="ah-card-body">
+                    <div class="ah-card-price">{{ phong.gia|currency }}</div>
+                    <h3 class="ah-card-title">{{ phong.ten_ch }}</h3>
+                    <div class="mt-auto d-flex gap-3">
+                        <span class="ah-card-meta"><i class="fa-solid fa-location-dot"></i> {{ phong.dia_chi.quan }}</span>
+                        <span class="ah-card-meta"><i class="fa-solid fa-expand"></i> {{ phong.dien_tich }}m²</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
