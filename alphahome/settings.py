@@ -12,6 +12,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-w!scu0hh+&3!%ph*geie7di8nnd+kf27pf=5!r9g&h)h+x)$&2'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = [
+    'https://alphahome.qdungdev.id.vn',
+    'https://*.qdungdev.id.vn',
+    'https://*.up.railway.app',
+]
 
 # Application definition
 INSTALLED_APPS = [
