@@ -1,4 +1,4 @@
-﻿asgiref==3.11.1
+asgiref==3.11.1
 certifi==2026.4.22
 cloudinary==1.44.2
 dj-database-url==3.1.2
@@ -9,3 +9,4 @@ sqlparse==0.5.5
 tzdata==2026.2
 urllib3==2.7.0
 gunicorn
+whitenoise
