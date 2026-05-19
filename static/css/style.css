@@ -553,6 +553,7 @@ h1, h2, h3, h4, h5, h6,
     border-radius: var(--radius-card);
     border: 1.5px solid var(--border);
     display: flex;
+    flex-direction: row;   /* explicit để không bị override vô tình */
     gap: 0;
     overflow: hidden;
     transition: all 0.22s;
@@ -564,13 +565,18 @@ h1, h2, h3, h4, h5, h6,
     transform: translateY(-2px);
 }
 .ah-list-card-img {
-    width: 150px;
-    height: 130px;
+    width: 160px;
+    min-height: 140px;      /* baseline; flex stretch sẽ kéo đến chiều cao thực của card */
+    align-self: stretch;    /* luôn fill đầy chiều cao của card ngang */
     flex-shrink: 0;
     overflow: hidden;
     position: relative;
 }
-.ah-list-card-img img {
+.ah-list-card-img img,
+.ah-list-card-img .ah-list-card-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -580,6 +586,7 @@ h1, h2, h3, h4, h5, h6,
 .ah-list-card-body {
     padding: 12px 16px;
     flex: 1;
+    min-width: 0;           /* cho phép text truncate bên trong flex item */
     display: flex;
     flex-direction: column;
 }
@@ -921,13 +928,13 @@ h1, h2, h3, h4, h5, h6,
     }
     .ah-sidebar-overlay.show { display: block; opacity: 1; }
 
-    /* List card responsive */
-    .ah-list-card { flex-direction: column; }
-    .ah-list-card-img { width: 100%; height: 180px; }
-    .ah-list-card-body { padding: 12px; }
-    .ah-card-title { font-size: 15px !important; }
-    .ah-card-price { font-size: 18px !important; }
-    .ah-card-meta { white-space: normal; } /* Allow wrapping for address */
+    /* List card responsive - giữ layout ngang, chỉ điều chỉnh size */
+    .ah-list-card { flex-direction: row; }
+    .ah-list-card-img { width: 130px; height: 130px; }
+    .ah-list-card-body { padding: 10px 12px; }
+    .ah-card-title { font-size: 14px !important; }
+    .ah-card-price { font-size: 16px !important; }
+    .ah-card-meta { white-space: normal; }
 }
 
 /* Bottom Navigation (Mobile Only) */
@@ -971,6 +978,137 @@ h1, h2, h3, h4, h5, h6,
     color: var(--honey-primary);
 }
 
+/* =====================================================
+   Grid / List Switcher View Mode
+   ===================================================== */
+.ah-product-container {
+    transition: all 0.3s ease;
+}
+
+/* Chế độ Grid (Lưới) */
+.ah-product-container.grid-mode {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 24px;
+    align-items: start;
+}
+
+/* Grid item wrapper - không set height để tránh circular dependency */
+.ah-product-container.grid-mode .position-relative {
+    display: flex;
+    flex-direction: column;
+}
+
+.ah-product-container.grid-mode .position-relative > a {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1;
+}
+
+.ah-product-container.grid-mode .ah-list-card {
+    flex-direction: column;
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.ah-product-container.grid-mode .ah-list-card-img {
+    width: 100%;
+    height: 200px;
+    min-height: 200px;
+    flex-shrink: 0;
+}
+
+.ah-product-container.grid-mode .ah-list-card-body {
+    padding: 14px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* View Mode Buttons */
+.view-mode-btn {
+    width: 32px;
+    height: 32px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 13px;
+    padding: 0;
+}
+.view-mode-btn:hover {
+    background: var(--honey-bg);
+    color: var(--honey-dark);
+    border-color: var(--honey-primary);
+}
+.view-mode-btn.active {
+    background: var(--honey-primary);
+    color: #1A1A1A;
+    border-color: var(--honey-primary);
+    font-weight: 700;
+}
+
 @media (min-width: 992px) {
     .ah-mobile-nav { display: none; }
+}
+
+/* =====================================================
+   Responsive: Mobile — Grid vs List rõ ràng
+   ===================================================== */
+@media (max-width: 767px) {
+    /* Chế độ List View trên Mobile (Layout ngang) */
+    .ah-product-container:not(.grid-mode) .ah-list-card {
+        flex-direction: row;
+        margin-bottom: 10px;
+    }
+    .ah-product-container:not(.grid-mode) .ah-list-card-img {
+        width: 120px;
+        min-height: 120px;
+        height: auto;
+        align-self: stretch; /* Đảm bảo ảnh luôn tự giãn full chiều cao theo card body */
+    }
+    .ah-product-container:not(.grid-mode) .ah-list-card-body {
+        padding: 10px 12px;
+    }
+
+    /* Chế độ Grid View trên Mobile (Layout dọc 2 cột) */
+    .ah-product-container.grid-mode {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .ah-product-container.grid-mode .ah-list-card {
+        flex-direction: column;
+        height: 100%;
+        margin-bottom: 0;
+    }
+    .ah-product-container.grid-mode .ah-list-card-img {
+        width: 100%;
+        height: 130px;
+        min-height: 130px;
+    }
+    .ah-product-container.grid-mode .ah-list-card-body {
+        padding: 8px 10px;
+        flex: 1;
+    }
+    .ah-product-container.grid-mode .ah-card-title,
+    .ah-product-container.grid-mode .ah-list-card-body .ah-card-title {
+        font-size: 12px;
+    }
+    .ah-product-container.grid-mode .ah-card-price,
+    .ah-product-container.grid-mode .ah-list-card-body .ah-card-price {
+        font-size: 14px;
+    }
+    /* Ẩn meta phụ trên grid mobile để card không quá chật */
+    .ah-product-container.grid-mode .ah-card-meta {
+        display: none;
+    }
+    .ah-product-container.grid-mode .d-flex.gap-3.flex-wrap {
+        display: none !important;
+    }
 }

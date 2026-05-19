@@ -19,6 +19,7 @@ urlpatterns = [
     path('quan-ly/phong/them/',         views.ProductManageView.as_view(), name='product_create'),
     path('quan-ly/phong/<int:pk>/sua/', views.ProductManageView.as_view(), name='product_edit'),
     path('quan-ly/phong/<int:pk>/xoa/', views.ProductDeleteView.as_view(), name='product_delete'),
+    path('quan-ly/phong/bulk/',         views.ProductBulkActionView.as_view(), name='product_bulk_action'),
 
     # Contracts (Staff & Manager)
     path('hop-dong/',                              views.ContractListView.as_view(),   name='contract_list'),
@@ -27,6 +28,8 @@ urlpatterns = [
     path('hop-dong/<int:pk>/duyet/',               views.ContractApproveView.as_view(), name='contract_approve'),
     path('hop-dong/<int:pk>/tu-choi/',             views.ContractRejectView.as_view(), name='contract_reject'),
     path('hop-dong/<int:pk>/huy-duyet/',           views.ContractCancelApproveView.as_view(), name='contract_cancel_approve'),
+    path('hop-dong/<int:pk>/xoa/',                 views.ContractDeleteView.as_view(), name='contract_delete'),
+    path('quan-ly/hop-dong/bulk/',                 views.ContractBulkActionView.as_view(), name='contract_bulk_action'),
 
     # Report & Map
     path('bao-cao/', views.ReportView.as_view(), name='report'),

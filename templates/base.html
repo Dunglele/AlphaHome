@@ -20,7 +20,7 @@
 
     <!-- AlphaHome CSS -->
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v={% now 'U' %}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png"
@@ -94,10 +94,10 @@
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" style="min-width:200px;">
                             <li class="px-3 py-2 border-bottom">
                                 <div class="fw-bold" style="font-size:14px;">
-                                    {% if user.quanly %}{{ user.quanly.ho_ten }}{% elif user.nhanvien %}{{ user.nhanvien.ho_ten }}{% else %}{{ user.get_full_name|default:user.username }}{% endif %}
+                                    {% if user.quanly %}{{ user.quanly.ho_ten }}{% elif user.nhanvien %}{{ user.nhanvien.ho_ten }}{% elif user.nhanvienmkt %}{{ user.nhanvienmkt.ho_ten }}{% elif user.khachhang %}{{ user.khachhang.ho_ten }}{% else %}{{ user.get_full_name|default:user.username }}{% endif %}
                                 </div>
                                 <div class="text-muted" style="font-size:12px;">
-                                    {% if user.is_superuser %}Admin tối cao{% elif user.quanly %}Quản lý{% else %}Nhân viên Sale{% endif %}
+                                    {% if user.is_superuser %}Admin tối cao{% elif user.quanly %}Quản lý{% elif user.nhanvienmkt %}Nhân viên MKT{% elif user.khachhang %}Khách hàng{% else %}Nhân viên Sale{% endif %}
                                 </div>
                             </li>
                             <li><a class="dropdown-item" href="{% url 'profile' %}"><i
@@ -204,7 +204,7 @@
             <i class="fa-solid fa-chart-pie"></i>
             <span>Báo cáo</span>
         </a>
-        {% else %}
+        {% elif user.nhanvien or user.khachhang %}
         <a href="{% url 'contract_list' %}"
             class="ah-mobile-link {% if request.resolver_match.url_name == 'contract_list' %}active{% endif %}">
             <i class="fa-solid fa-file-invoice-dollar"></i>

@@ -129,6 +129,20 @@
             </div>
         </div>
         {% endif %}
+
+        {% if user.quanly %}
+        <div class="ah-panel border-danger bg-light mt-3">
+            <div class="ah-panel-title text-danger"><i class="fa-solid fa-trash-can"></i> Xóa hợp đồng</div>
+            <div class="d-grid">
+                <form action="{% url 'contract_delete' hd.pk %}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn hợp đồng này? Hành động này không thể hoàn tác và sẽ cập nhật trạng thái phòng.')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fa-solid fa-trash-can me-1"></i> Xóa hợp đồng
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

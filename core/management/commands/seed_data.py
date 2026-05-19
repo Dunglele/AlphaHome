@@ -1,4 +1,4 @@
-"""
+r"""
 Seed data: tạo user admin/quanly/nhanvien + chuyên mục + 12 phòng mẫu.
 Chạy: .\venv\Scripts\python.exe manage.py seed_data
 """
@@ -71,7 +71,7 @@ class Command(BaseCommand):
     help = 'Tạo dữ liệu mẫu cho hệ thống AlphaHome'
 
     def handle(self, *args, **kwargs):
-        self.stdout.write('🌱 Bắt đầu tạo seed data...')
+        self.stdout.write('[+] Bat dau tao seed data...')
 
         # Quản lý
         ql_user, _ = User.objects.get_or_create(username='quanly', defaults={
@@ -83,7 +83,7 @@ class Command(BaseCommand):
         ql, _ = QuanLy.objects.get_or_create(user=ql_user, defaults={
             'ho_ten': 'Trần Văn Quản', 'so_dien_thoai': '0901000001', 'chuc_vu': 'Quản lý trưởng',
         })
-        self.stdout.write('  ✓ Quản lý: quanly / alphahome123')
+        self.stdout.write('  [v] Quan ly: quanly / alphahome123')
 
         # Nhân viên Sale
         nv_user, _ = User.objects.get_or_create(username='nhanvien', defaults={
@@ -95,7 +95,7 @@ class Command(BaseCommand):
         nv, _ = NhanVien.objects.get_or_create(user=nv_user, defaults={
             'ho_ten': 'Nguyễn Thị Sale', 'so_dien_thoai': '0901000002',
         })
-        self.stdout.write('  ✓ Nhân viên: nhanvien / alphahome123')
+        self.stdout.write('  [v] Nhan vien: nhanvien / alphahome123')
 
         # Chuyên mục
         cm_data = [
@@ -107,7 +107,7 @@ class Command(BaseCommand):
         for ten, icon, manager in cm_data:
             cm, _ = ChuyenMuc.objects.get_or_create(ten_cm=ten, defaults={'icon': icon, 'quan_ly': manager})
             chuyen_muc[ten] = cm
-        self.stdout.write('  ✓ 3 chuyên mục')
+        self.stdout.write('  [v] 3 chuyen muc')
 
         # Phòng mẫu
         for i, data in enumerate(SAMPLE_PHONG):
@@ -130,8 +130,8 @@ class Command(BaseCommand):
             )
             Anh.objects.create(can_ho=phong, link_anh=data['anh'], la_anh_chinh=True)
 
-        self.stdout.write(f'  ✓ {len(SAMPLE_PHONG)} phòng mẫu')
-        self.stdout.write(self.style.SUCCESS('\n✅ Seed data hoàn tất!'))
-        self.stdout.write('\n  Đăng nhập:')
-        self.stdout.write('  Quản lý  → quanly / alphahome123')
-        self.stdout.write('  Nhân viên → nhanvien / alphahome123')
+        self.stdout.write(f'  [v] {len(SAMPLE_PHONG)} phong mau')
+        self.stdout.write(self.style.SUCCESS('\n[OK] Seed data hoan tat!'))
+        self.stdout.write('\n  Dang nhap:')
+        self.stdout.write('  Quan ly  -> quanly / alphahome123')
+        self.stdout.write('  Nhan vien -> nhanvien / alphahome123')

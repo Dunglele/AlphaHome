@@ -19,7 +19,7 @@ from django.views import View
 from django.views.generic import DetailView, ListView
 from django.contrib.auth.models import User
 
-from .models import Anh, CanHo, ChuyenMuc, DiaChi, HopDong, KhachHang, NhanVien, QuanLy
+from .models import Anh, CanHo, ChuyenMuc, DiaChi, HopDong, KhachHang, NhanVien, NhanVienMKT, QuanLy
 
 # Cloudinary Configuration
 cloudinary.config(
@@ -112,6 +112,8 @@ class DashboardView(StaffRequiredMixin, View):
 
 class ProductListView(StaffRequiredMixin, View):
     paginate_by = 10
+    GRID_PAGE_SIZE = 12
+    LIST_PAGE_SIZE = 10
 
     def get(self, request: HttpRequest) -> HttpResponse:
         qs = CanHo.objects.select_related('dia_chi', 'chuyen_muc').prefetch_related('anh_set')
@@ -149,7 +151,10 @@ class ProductListView(StaffRequiredMixin, View):
             qs = qs.order_by('-pk')  # Mới nhất trước
 
         from django.core.paginator import Paginator
-        paginator = Paginator(qs, self.paginate_by)
+        # ps=12 → grid mode, ps=10 → list mode; fallback to default
+        ps_param = request.GET.get('ps', '')
+        page_size = self.GRID_PAGE_SIZE if ps_param == '12' else self.LIST_PAGE_SIZE
+        paginator = Paginator(qs, page_size)
         page_obj = paginator.get_page(request.GET.get('page', 1))
 
         ctx = _base_context(request)
@@ -251,7 +256,12 @@ class ContractListView(StaffRequiredMixin, View):
         qs = HopDong.objects.select_related('can_ho', 'khach_hang', 'nhan_vien').all()
 
         if not (hasattr(request.user, 'quanly') or request.user.is_superuser):
-            qs = qs.filter(nhan_vien=getattr(request.user, 'nhanvien', None))
+            if hasattr(request.user, 'nhanvien'):
+                qs = qs.filter(nhan_vien=request.user.nhanvien)
+            elif hasattr(request.user, 'khachhang'):
+                qs = qs.filter(khach_hang=request.user.khachhang)
+            else:
+                qs = qs.none()
 
         if tt := request.GET.get('tt'):
             qs = qs.filter(trang_thai=tt)
@@ -279,9 +289,16 @@ class ContractDetailView(StaffRequiredMixin, View):
         hd = get_object_or_404(HopDong.objects.select_related('can_ho', 'khach_hang', 'nhan_vien'), pk=pk)
         
         # Security: Staff can only see their own contracts
-        if not (hasattr(request.user, 'quanly') or request.user.is_superuser) and hd.nhan_vien != getattr(request.user, 'nhanvien', None):
-            messages.error(request, 'Bạn không có quyền xem hợp đồng này.')
-            return redirect('contract_list')
+        if not (hasattr(request.user, 'quanly') or request.user.is_superuser):
+            if hasattr(request.user, 'nhanvien') and hd.nhan_vien != request.user.nhanvien:
+                messages.error(request, 'Bạn không có quyền xem hợp đồng này.')
+                return redirect('contract_list')
+            elif hasattr(request.user, 'khachhang') and hd.khach_hang != request.user.khachhang:
+                messages.error(request, 'Bạn không có quyền xem hợp đồng này.')
+                return redirect('contract_list')
+            elif hasattr(request.user, 'nhanvienmkt'):
+                messages.error(request, 'Bạn không có quyền xem hợp đồng này.')
+                return redirect('contract_list')
 
         ctx = _base_context(request)
         ctx['hd'] = hd
@@ -368,9 +385,65 @@ class ContractEditView(StaffRequiredMixin, View):
         hd.tong_tien_thu = request.POST.get('tong_tien_thu', hd.tong_tien_thu)
         hd.minh_chung = request.POST.get('minh_chung', hd.minh_chung).strip()
         hd.ghi_chu = request.POST.get('ghi_chu', hd.ghi_chu).strip()
-        hd.save()
-
         messages.success(request, f'Đã cập nhật hợp đồng HĐ-{hd.pk:04d}.')
+        return redirect('contract_list')
+
+
+class ContractDeleteView(ManagerRequiredMixin, View):
+    """Quản lý xóa hợp đồng, khôi phục phòng về Còn trống nếu hợp đồng đang duyệt/chờ duyệt."""
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        hd = get_object_or_404(HopDong, pk=pk)
+        if hd.trang_thai in [HopDong.TrangThai.DA_DUYET, HopDong.TrangThai.CHO_DUYET]:
+            hd.can_ho.trang_thai = CanHo.TrangThai.TRONG
+            hd.can_ho.save(update_fields=['trang_thai'])
+        hd.delete()
+        messages.success(request, f'Đã xóa hợp đồng HĐ-{pk:04d} thành công.')
+        return redirect('contract_list')
+
+
+class ContractBulkActionView(ManagerRequiredMixin, View):
+    """Xử lý hành động hàng loạt trên Hợp đồng."""
+    def post(self, request: HttpRequest) -> HttpResponse:
+        selected_ids_str = request.POST.getlist('selected_ids')
+        action = request.POST.get('action')
+        
+        if not selected_ids_str:
+            messages.warning(request, 'Vui lòng chọn ít nhất một hợp đồng.')
+            return redirect('contract_list')
+            
+        selected_ids = [int(i) for i in selected_ids_str if i.isdigit()]
+        contracts = HopDong.objects.filter(pk__in=selected_ids)
+        
+        count = 0
+        if action == 'approve':
+            for hd in contracts:
+                if hd.trang_thai != HopDong.TrangThai.DA_DUYET:
+                    hd.trang_thai = HopDong.TrangThai.DA_DUYET
+                    hd.save(update_fields=['trang_thai'])
+                    hd.can_ho.trang_thai = CanHo.TrangThai.DA_THUE
+                    hd.can_ho.save(update_fields=['trang_thai'])
+                    count += 1
+            messages.success(request, f'Đã duyệt thành công {count} hợp đồng.')
+            
+        elif action == 'reject':
+            for hd in contracts:
+                if hd.trang_thai != HopDong.TrangThai.TU_CHOI:
+                    hd.trang_thai = HopDong.TrangThai.TU_CHOI
+                    hd.save(update_fields=['trang_thai'])
+                    hd.can_ho.trang_thai = CanHo.TrangThai.TRONG
+                    hd.can_ho.save(update_fields=['trang_thai'])
+                    count += 1
+            messages.warning(request, f'Đã từ chối {count} hợp đồng.')
+            
+        elif action == 'delete':
+            for hd in contracts:
+                if hd.trang_thai in [HopDong.TrangThai.DA_DUYET, HopDong.TrangThai.CHO_DUYET]:
+                    hd.can_ho.trang_thai = CanHo.TrangThai.TRONG
+                    hd.can_ho.save(update_fields=['trang_thai'])
+                hd.delete()
+                count += 1
+            messages.success(request, f'Đã xóa vĩnh viễn {count} hợp đồng.')
+            
         return redirect('contract_list')
 
 
@@ -446,6 +519,45 @@ class ProductDeleteView(ManagerRequiredMixin, View):
             messages.success(request, f'Đã xóa phòng "{ten}".')
         except ProtectedError:
             messages.error(request, f'Không thể xóa phòng "{ten}" vì đang có Hợp đồng liên quan. Vui lòng xóa hợp đồng trước.')
+        return redirect('product_list')
+
+
+class ProductBulkActionView(ManagerRequiredMixin, View):
+    """Xử lý hành động hàng loạt trên Căn hộ/Phòng trọ."""
+    def post(self, request: HttpRequest) -> HttpResponse:
+        selected_ids_str = request.POST.getlist('selected_ids')
+        action = request.POST.get('action')
+        
+        if not selected_ids_str:
+            messages.warning(request, 'Vui lòng chọn ít nhất một phòng trọ.')
+            return redirect('product_list')
+            
+        selected_ids = [int(i) for i in selected_ids_str if i.isdigit()]
+        rooms = CanHo.objects.filter(pk__in=selected_ids)
+        
+        if action == 'delete':
+            from django.db.models import ProtectedError
+            deleted_count = 0
+            protected_count = 0
+            for r in rooms:
+                try:
+                    r.delete()
+                    deleted_count += 1
+                except ProtectedError:
+                    protected_count += 1
+            if deleted_count > 0:
+                messages.success(request, f'Đã xóa thành công {deleted_count} phòng.')
+            if protected_count > 0:
+                messages.error(request, f'Không thể xóa {protected_count} phòng do đang có hợp đồng ràng buộc.')
+                
+        elif action == 'status_trong':
+            rooms.update(trang_thai=CanHo.TrangThai.TRONG)
+            messages.success(request, f'Đã chuyển trạng thái {rooms.count()} phòng thành Còn trống.')
+            
+        elif action == 'status_dathue':
+            rooms.update(trang_thai=CanHo.TrangThai.DA_THUE)
+            messages.success(request, f'Đã chuyển trạng thái {rooms.count()} phòng thành Đã thuê.')
+            
         return redirect('product_list')
 
 
@@ -583,7 +695,7 @@ class AccountListView(ManagerRequiredMixin, ListView):
     paginate_by = 10
     
     def get_queryset(self):
-        return User.objects.filter(is_superuser=False).select_related('nhanvien', 'quanly').order_by('-date_joined')
+        return User.objects.filter(is_superuser=False).select_related('nhanvien', 'quanly', 'nhanvienmkt', 'khachhang').order_by('-date_joined')
         
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -612,6 +724,10 @@ class AccountCreateView(ManagerRequiredMixin, View):
             user.is_staff = True
             user.save()
             QuanLy.objects.create(user=user, ho_ten=ho_ten, so_dien_thoai=sdt, chuc_vu='Quản lý')
+        elif vai_tro == 'NHAN_VIEN_MKT':
+            NhanVienMKT.objects.create(user=user, ho_ten=ho_ten, so_dien_thoai=sdt)
+        elif vai_tro == 'KHACH_HANG':
+            KhachHang.objects.create(user=user, ho_ten=ho_ten, so_dien_thoai=sdt)
         else:
             NhanVien.objects.create(user=user, ho_ten=ho_ten, so_dien_thoai=sdt)
             
@@ -627,6 +743,10 @@ class AccountDeleteView(ManagerRequiredMixin, View):
             messages.error(request, 'Bạn không thể tự xóa tài khoản của chính mình.')
             return redirect('account_list')
             
+        if hasattr(user_to_delete, 'quanly') and not request.user.is_superuser:
+            messages.error(request, 'Bạn không có quyền xóa tài khoản Quản lý khác.')
+            return redirect('account_list')
+            
         user_to_delete.delete()
         messages.success(request, f'Đã xóa tài khoản {username} thành công.')
         return redirect('account_list')
@@ -634,6 +754,11 @@ class AccountDeleteView(ManagerRequiredMixin, View):
 class AccountEditView(ManagerRequiredMixin, View):
     def get(self, request: HttpRequest, pk: int) -> HttpResponse:
         u = get_object_or_404(User, pk=pk, is_superuser=False)
+        
+        if hasattr(u, 'quanly') and not request.user.is_superuser:
+            messages.error(request, 'Bạn không có quyền sửa tài khoản Quản lý khác.')
+            return redirect('account_list')
+            
         ctx = _base_context(request)
         ctx.update({
             'u': u,
@@ -643,6 +768,11 @@ class AccountEditView(ManagerRequiredMixin, View):
 
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         u = get_object_or_404(User, pk=pk, is_superuser=False)
+        
+        if hasattr(u, 'quanly') and not request.user.is_superuser:
+            messages.error(request, 'Bạn không có quyền sửa tài khoản Quản lý khác.')
+            return redirect('account_list')
+            
         username = request.POST.get('username').strip()
         password = request.POST.get('password')
         ho_ten = request.POST.get('ho_ten').strip()
@@ -661,17 +791,37 @@ class AccountEditView(ManagerRequiredMixin, View):
             
         if vai_tro == 'QUAN_LY':
             u.is_staff = True
-            if hasattr(u, 'nhanvien'):
-                u.nhanvien.delete()
+            NhanVien.objects.filter(user=u).delete()
+            NhanVienMKT.objects.filter(user=u).delete()
+            KhachHang.objects.filter(user=u).update(user=None)
             quan_ly, created = QuanLy.objects.get_or_create(user=u)
             quan_ly.ho_ten = ho_ten
             quan_ly.so_dien_thoai = sdt
             quan_ly.chuc_vu = 'Quản lý'
             quan_ly.save()
+        elif vai_tro == 'NHAN_VIEN_MKT':
+            u.is_staff = False
+            QuanLy.objects.filter(user=u).delete()
+            NhanVien.objects.filter(user=u).delete()
+            KhachHang.objects.filter(user=u).update(user=None)
+            nhan_vien_mkt, created = NhanVienMKT.objects.get_or_create(user=u)
+            nhan_vien_mkt.ho_ten = ho_ten
+            nhan_vien_mkt.so_dien_thoai = sdt
+            nhan_vien_mkt.save()
+        elif vai_tro == 'KHACH_HANG':
+            u.is_staff = False
+            QuanLy.objects.filter(user=u).delete()
+            NhanVien.objects.filter(user=u).delete()
+            NhanVienMKT.objects.filter(user=u).delete()
+            khach_hang, created = KhachHang.objects.get_or_create(user=u)
+            khach_hang.ho_ten = ho_ten
+            khach_hang.so_dien_thoai = sdt
+            khach_hang.save()
         else:
             u.is_staff = False
-            if hasattr(u, 'quanly'):
-                u.quanly.delete()
+            QuanLy.objects.filter(user=u).delete()
+            NhanVienMKT.objects.filter(user=u).delete()
+            KhachHang.objects.filter(user=u).update(user=None)
             nhan_vien, created = NhanVien.objects.get_or_create(user=u)
             nhan_vien.ho_ten = ho_ten
             nhan_vien.so_dien_thoai = sdt

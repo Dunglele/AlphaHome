@@ -33,17 +33,19 @@
                 <div class="col-12">
                     <label class="form-label" for="ho_ten">Họ và tên <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" name="ho_ten" id="ho_ten" 
-                           value="{% if u.quanly %}{{ u.quanly.ho_ten }}{% elif u.nhanvien %}{{ u.nhanvien.ho_ten }}{% endif %}" required>
+                           value="{% if u.quanly %}{{ u.quanly.ho_ten }}{% elif u.nhanvien %}{{ u.nhanvien.ho_ten }}{% elif u.nhanvienmkt %}{{ u.nhanvienmkt.ho_ten }}{% elif u.khachhang %}{{ u.khachhang.ho_ten }}{% endif %}" required>
                 </div>
                 <div class="col-12">
                     <label class="form-label" for="sdt">Số điện thoại <span class="text-danger">*</span></label>
                     <input type="tel" class="form-control" name="sdt" id="sdt" 
-                           value="{% if u.quanly %}{{ u.quanly.so_dien_thoai }}{% elif u.nhanvien %}{{ u.nhanvien.so_dien_thoai }}{% endif %}" required>
+                           value="{% if u.quanly %}{{ u.quanly.so_dien_thoai }}{% elif u.nhanvien %}{{ u.nhanvien.so_dien_thoai }}{% elif u.nhanvienmkt %}{{ u.nhanvienmkt.so_dien_thoai }}{% elif u.khachhang %}{{ u.khachhang.so_dien_thoai }}{% endif %}" required>
                 </div>
                 <div class="col-12">
                     <label class="form-label" for="vai_tro">Vai trò <span class="text-danger">*</span></label>
                     <select class="form-select" name="vai_tro" id="vai_tro" required>
-                        <option value="NHAN_VIEN" {% if is_edit and not u.quanly %}selected{% endif %}>Nhân viên Sale</option>
+                        <option value="NHAN_VIEN" {% if is_edit and u.nhanvien %}selected{% endif %}>Nhân viên Sale</option>
+                        <option value="NHAN_VIEN_MKT" {% if is_edit and u.nhanvienmkt %}selected{% endif %}>Nhân viên MKT</option>
+                        <option value="KHACH_HANG" {% if is_edit and u.khachhang %}selected{% endif %}>Khách hàng</option>
                         <option value="QUAN_LY" {% if is_edit and u.quanly %}selected{% endif %}>Quản lý</option>
                     </select>
                 </div>

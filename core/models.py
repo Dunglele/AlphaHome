@@ -15,6 +15,19 @@ class NhanVien(models.Model):
         return self.ho_ten
 
 
+class NhanVienMKT(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='nhanvienmkt')
+    ho_ten = models.CharField(max_length=100)
+    so_dien_thoai = models.CharField(max_length=15)
+
+    class Meta:
+        verbose_name = 'Nhân Viên MKT'
+        verbose_name_plural = 'Nhân Viên MKT'
+
+    def __str__(self) -> str:
+        return self.ho_ten
+
+
 class QuanLy(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='quanly')
     ho_ten = models.CharField(max_length=100)
@@ -119,6 +132,7 @@ class DiaChi(models.Model):
 
 
 class KhachHang(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='khachhang', null=True, blank=True)
     ho_ten = models.CharField(max_length=100)
     so_dien_thoai = models.CharField(max_length=15)
     email = models.EmailField(blank=True)

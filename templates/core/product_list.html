@@ -105,19 +105,39 @@
 </div>
 
 <!-- Result count + sort -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <span class="text-muted" style="font-size:14px;">
-        Tìm thấy <strong style="color:var(--honey-dark);">{{ page_obj.paginator.count }}</strong> sản phẩm
-    </span>
-    <select class="form-select form-select-sm w-auto" onchange="updateSort(this.value)">
-        <option value="-pk" {% if request.GET.sort == '-pk' or not request.GET.sort %}selected{% endif %}>Mới nhất trước
-        </option>
-        <option value="gia_tang" {% if request.GET.sort == 'gia_tang' %}selected{% endif %}>Thấp đến Cao</option>
-        <option value="gia_giam" {% if request.GET.sort == 'gia_giam' %}selected{% endif %}>Cao đến Thấp</option>
-        <option value="ten_az" {% if request.GET.sort == 'ten_az' %}selected{% endif %}>A -> Z</option>
-        <option value="ten_za" {% if request.GET.sort == 'ten_za' %}selected{% endif %}>Z -> A</option>
-    </select>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+        <span class="text-muted text-nowrap" style="font-size:14px;">
+            Tìm thấy <strong style="color:var(--honey-dark);">{{ page_obj.paginator.count }}</strong> sản phẩm
+        </span>
+        {% if user.quanly and page_obj %}
+        <div class="form-check m-0 d-flex align-items-center gap-1" style="font-size:13px;">
+            <input type="checkbox" id="selectAll" class="form-check-input m-0" style="cursor:pointer; width:16px; height:16px;">
+            <label class="form-check-label text-muted fw-semibold text-nowrap" for="selectAll" style="cursor:pointer; user-select:none;">Chọn tất cả</label>
+        </div>
+        {% endif %}
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto">
+        <select class="form-select form-select-sm w-auto" onchange="updateSort(this.value)">
+            <option value="-pk" {% if request.GET.sort == '-pk' or not request.GET.sort %}selected{% endif %}>Mới nhất trước</option>
+            <option value="gia_tang" {% if request.GET.sort == 'gia_tang' %}selected{% endif %}>Thấp đến Cao</option>
+            <option value="gia_giam" {% if request.GET.sort == 'gia_giam' %}selected{% endif %}>Cao đến Thấp</option>
+            <option value="ten_az" {% if request.GET.sort == 'ten_az' %}selected{% endif %}>A → Z</option>
+            <option value="ten_za" {% if request.GET.sort == 'ten_za' %}selected{% endif %}>Z → A</option>
+        </select>
+
+        <!-- Toggle View Mode Buttons -->
+        <div class="d-flex align-items-center gap-1">
+            <button type="button" id="btnListView" class="view-mode-btn active" title="Xem dạng dòng">
+                <i class="fa-solid fa-list"></i>
+            </button>
+            <button type="button" id="btnGridView" class="view-mode-btn" title="Xem dạng lưới">
+                <i class="fa-solid fa-table-cells"></i>
+            </button>
+        </div>
+    </div>
 </div>
+
 
 <script>
     function updateSort(val) {
@@ -128,89 +148,96 @@
 </script>
 
 <!-- Product List -->
-<div class="mb-4">
-    {% for phong in page_obj %}
-    <a href="{% url 'product_detail' phong.pk %}" class="text-decoration-none d-block">
-        <div class="ah-list-card">
-            <!-- Image -->
-            <div class="ah-list-card-img">
-                {% with phong.anh_set.first as anh %}
-                {% if anh %}
-                <img src="{{ anh.link_anh }}" alt="{{ phong.ten_ch }}">
-                {% else %}
-                <div
-                    style="width:100%;height:100%;background:var(--honey-amber);display:flex;align-items:center;justify-content:center;color:var(--honey-dark);font-size:32px;">
-                    <i class="fa-solid fa-image"></i>
-                </div>
-                {% endif %}
-                {% endwith %}
-                <div class="badge-photo">
-                    <i class="fa-solid fa-camera"></i> {{ phong.anh_set.count }}
-                </div>
-            </div>
+{% if user.quanly %}
+<form id="bulkActionForm" action="{% url 'product_bulk_action' %}" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" id="bulkActionInput" value="">
+{% endif %}
 
-            <!-- Info -->
-            <div class="ah-list-card-body">
-                <div class="d-flex justify-content-between align-items-start mb-1">
-                    <div class="ah-card-title" style="height:auto;-webkit-line-clamp:2;font-size:15px;">
-                        {{ phong.ten_ch }}
+<div id="productContainer" class="ah-product-container mb-4">
+    {% for phong in page_obj %}
+    <div class="position-relative">
+        <a href="{% url 'product_detail' phong.pk %}" class="text-decoration-none d-block">
+            <div class="ah-list-card">
+                <!-- Image -->
+                <div class="ah-list-card-img">
+                    {% if user.quanly %}
+                    <input type="checkbox" name="selected_ids" value="{{ phong.pk }}" class="form-check-input product-checkbox position-absolute" style="top: 12px; left: 12px; z-index: 10; width: 18px; height: 18px; cursor: pointer; border: 2px solid #fff; background-color: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.25), 0 2px 5px rgba(0,0,0,0.25);" onclick="event.stopPropagation();">
+                    {% endif %}
+                    {% with phong.anh_set.first as anh %}
+                    {% if anh %}
+                    <img src="{{ anh.link_anh }}" alt="{{ phong.ten_ch }}">
+                    {% else %}
+                    <div class="ah-list-card-placeholder"
+                        style="background:var(--honey-amber);display:flex;align-items:center;justify-content:center;color:var(--honey-dark);font-size:32px;">
+                        <i class="fa-solid fa-image"></i>
                     </div>
-                    <!-- Status -->
-                    <div class="ms-3 flex-shrink-0">
-                        {% if phong.trang_thai == 'TRONG' %}
-                        <span class="badge-status badge-available"><i class="fa-solid fa-circle"
-                                style="font-size:7px;"></i> Còn trống</span>
-                        {% elif phong.trang_thai == 'CHO_DUYET' %}
-                        <span class="badge-status badge-pending"><i class="fa-solid fa-clock"
-                                style="font-size:7px;"></i> Chờ duyệt</span>
-                        {% else %}
-                        <span class="badge-status badge-rented"><i class="fa-solid fa-lock" style="font-size:7px;"></i>
-                            Đã thuê</span>
+                    {% endif %}
+                    {% endwith %}
+                    <div class="badge-photo">
+                        <i class="fa-solid fa-camera"></i> {{ phong.anh_set.count }}
+                    </div>
+                </div>
+
+                <!-- Info -->
+                <div class="ah-list-card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div class="ah-card-title" style="height:auto;-webkit-line-clamp:2;font-size:15px;">
+                            {{ phong.ten_ch }}
+                        </div>
+                        <!-- Status -->
+                        <div class="ms-3 flex-shrink-0">
+                            {% if phong.trang_thai == 'TRONG' %}
+                            <span class="badge-status badge-available"><i class="fa-solid fa-circle"
+                                    style="font-size:7px;"></i> Còn trống</span>
+                            {% elif phong.trang_thai == 'CHO_DUYET' %}
+                            <span class="badge-status badge-pending"><i class="fa-solid fa-clock"
+                                    style="font-size:7px;"></i> Chờ duyệt</span>
+                            {% else %}
+                            <span class="badge-status badge-rented"><i class="fa-solid fa-lock" style="font-size:7px;"></i>
+                                Đã thuê</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="ah-card-price" style="font-size:19px;">{{ phong.gia_format }}</div>
+
+                    <div class="d-flex gap-3 flex-wrap mt-1">
+                        {% if phong.dien_tich %}
+                        <span class="ah-card-meta"><i class="fa-solid fa-expand"></i> {{ phong.dien_tich }} m²</span>
+                        {% endif %}
+                        <span class="ah-card-meta"><i class="fa-solid fa-tag"></i> {{ phong.get_loai_phong_display }}</span>
+                        {% if phong.dia_chi %}
+                        <span class="ah-card-meta"><i class="fa-solid fa-location-dot"
+                                style="color:var(--honey-primary);"></i> {{ phong.dia_chi.dia_chi_day_du }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-auto pt-2 d-flex justify-content-between align-items-center"
+                        style="border-top:1px solid var(--border);margin-top:10px;">
+                        <span style="font-size:11px;color:var(--text-muted);">
+                            <i class="fa-regular fa-clock"></i> {{ phong.ngay_tao|timesince }} trước
+                        </span>
+                        {% if phong.trang_thai == 'TRONG' and user.nhanvien %}
+                        <span class="btn-chot-sale"
+                            style="padding:5px 14px;font-size:12px;border-radius:8px;pointer-events:none;">
+                            <i class="fa-solid fa-handshake me-1"></i>Chốt Sale
+                        </span>
+                        {% elif user.quanly %}
+                        <div class="d-flex gap-1" onclick="event.stopPropagation();">
+                            <a href="{% url 'product_edit' phong.pk %}" class="btn btn-sm btn-outline-warning rounded-2">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-2 btn-single-product-delete" data-url="{% url 'product_delete' phong.pk %}" data-confirm="Bạn có chắc chắn muốn xóa phòng trọ này?">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
                         {% endif %}
                     </div>
                 </div>
-
-                <div class="ah-card-price" style="font-size:19px;">{{ phong.gia_format }}</div>
-
-                <div class="d-flex gap-3 flex-wrap mt-1">
-                    {% if phong.dien_tich %}
-                    <span class="ah-card-meta"><i class="fa-solid fa-expand"></i> {{ phong.dien_tich }} m²</span>
-                    {% endif %}
-                    <span class="ah-card-meta"><i class="fa-solid fa-tag"></i> {{ phong.get_loai_phong_display }}</span>
-                    {% if phong.dia_chi %}
-                    <span class="ah-card-meta"><i class="fa-solid fa-location-dot"
-                            style="color:var(--honey-primary);"></i> {{ phong.dia_chi.dia_chi_day_du }}</span>
-                    {% endif %}
-                </div>
-
-                <div class="mt-auto pt-2 d-flex justify-content-between align-items-center"
-                    style="border-top:1px solid var(--border);margin-top:10px;">
-                    <span style="font-size:11px;color:var(--text-muted);">
-                        <i class="fa-regular fa-clock"></i> {{ phong.ngay_tao|timesince }} trước
-                    </span>
-                    {% if phong.trang_thai == 'TRONG' and not user.quanly %}
-                    <span class="btn-chot-sale"
-                        style="padding:5px 14px;font-size:12px;border-radius:8px;pointer-events:none;">
-                        <i class="fa-solid fa-handshake me-1"></i>Chốt Sale
-                    </span>
-                    {% elif user.quanly %}
-                    <div class="d-flex gap-1">
-                        <a href="{% url 'product_edit' phong.pk %}" class="btn btn-sm btn-outline-warning rounded-2">
-                            <i class="fa-solid fa-pen"></i>
-                        </a>
-                        <form action="{% url 'product_delete' phong.pk %}" method="post" style="display:inline;"
-                            onsubmit="return confirm('Xóa phòng này?')">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-2">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </form>
-                    </div>
-                    {% endif %}
-                </div>
             </div>
-        </div>
-    </a>
+        </a>
+    </div>
     {% empty %}
     <div class="ah-panel text-center py-5">
         <i class="fa-solid fa-magnifying-glass fs-1 mb-3" style="color:var(--honey-amber);"></i>
@@ -257,6 +284,141 @@
         {% endif %}
     </ul>
 </nav>
+{% endif %}
+
+{% if user.quanly %}
+</form>
+
+<!-- Bulk Action Bar -->
+<div id="bulkActionBar" class="position-fixed bottom-0 start-50 translate-middle-x bg-white px-4 py-3 rounded-4 shadow-lg border d-none" style="z-index: 1050; margin-bottom: 24px; min-width: 450px; transition: all 0.3s ease;">
+    <div class="d-flex align-items-center justify-content-between gap-3">
+        <span class="text-dark fw-bold small"><i class="fa-solid fa-square-check text-warning me-2"></i>Đang chọn <span id="selectedCount" class="badge bg-warning text-dark">0</span> phòng</span>
+        <div class="d-flex gap-2">
+            <button type="button" onclick="submitBulkAction('status_trong')" class="btn btn-sm btn-outline-primary rounded-3 px-3">
+                Đặt trống
+            </button>
+            <button type="button" onclick="submitBulkAction('status_dathue')" class="btn btn-sm btn-outline-dark rounded-3 px-3">
+                Đặt đã thuê
+            </button>
+            <button type="button" onclick="submitBulkAction('delete')" class="btn btn-sm btn-danger rounded-3 px-3">
+                <i class="fa-solid fa-trash-can me-1"></i>Xóa
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const itemCheckboxes = document.querySelectorAll('.product-checkbox');
+        const bulkActionBar = document.getElementById('bulkActionBar');
+        const selectedCountSpan = document.getElementById('selectedCount');
+        const bulkActionInput = document.getElementById('bulkActionInput');
+        const bulkActionForm = document.getElementById('bulkActionForm');
+
+        function updateBulkActionBar() {
+            const checkedCount = document.querySelectorAll('.product-checkbox:checked').length;
+            if (selectedCountSpan) selectedCountSpan.textContent = checkedCount;
+            
+            if (checkedCount > 0) {
+                bulkActionBar.classList.remove('d-none');
+                bulkActionBar.style.opacity = '1';
+            } else {
+                bulkActionBar.classList.add('d-none');
+            }
+        }
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                itemCheckboxes.forEach(cb => {
+                    cb.checked = selectAllCheckbox.checked;
+                });
+                updateBulkActionBar();
+            });
+        }
+
+        itemCheckboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                const allChecked = Array.from(itemCheckboxes).every(c => c.checked);
+                if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
+                updateBulkActionBar();
+            });
+        });
+
+        window.submitBulkAction = function(actionName) {
+            let confirmMsg = '';
+            if (actionName === 'status_trong') confirmMsg = 'Bạn có chắc chắn muốn chuyển tất cả phòng đã chọn thành trạng thái "Còn trống"?';
+            else if (actionName === 'status_dathue') confirmMsg = 'Bạn có chắc chắn muốn chuyển tất cả phòng đã chọn thành trạng thái "Đã thuê"?';
+            else if (actionName === 'delete') confirmMsg = 'Bạn có chắc chắn muốn XÓA VĨNH VIỄN các phòng đã chọn? Các phòng có hợp đồng ràng buộc sẽ không bị xóa.';
+            
+            if (confirm(confirmMsg)) {
+                bulkActionInput.value = actionName;
+                bulkActionForm.submit();
+            }
+        }
+
+        // Single product delete handler avoiding nested forms
+        document.querySelectorAll('.btn-single-product-delete').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = this.getAttribute('data-url');
+                const confirmMsg = this.getAttribute('data-confirm');
+                if (confirm(confirmMsg)) {
+                    const form = document.getElementById('singleProductDeleteForm');
+                    form.action = url;
+                    form.submit();
+                }
+            });
+        });
+
+        // Grid / List View switching logic
+        const btnListView = document.getElementById('btnListView');
+        const btnGridView = document.getElementById('btnGridView');
+        const productContainer = document.getElementById('productContainer');
+
+        function applyViewClass(mode) {
+            if (!productContainer) return;
+            if (mode === 'grid') {
+                productContainer.classList.add('grid-mode');
+                if (btnGridView) btnGridView.classList.add('active');
+                if (btnListView) btnListView.classList.remove('active');
+            } else {
+                productContainer.classList.remove('grid-mode');
+                if (btnListView) btnListView.classList.add('active');
+                if (btnGridView) btnGridView.classList.remove('active');
+            }
+        }
+
+        function switchViewMode(mode) {
+            localStorage.setItem('productViewMode', mode);
+            const url = new URL(window.location.href);
+            url.searchParams.delete('page'); // reset về trang 1
+            if (mode === 'grid') {
+                url.searchParams.set('ps', '12');
+            } else {
+                url.searchParams.delete('ps');
+            }
+            window.location.href = url.toString();
+        }
+
+        // Initialize from URL param (ưu tiên hơn localStorage)
+        const urlPs = new URLSearchParams(window.location.search).get('ps');
+        const savedMode = urlPs === '12' ? 'grid' : (localStorage.getItem('productViewMode') || 'list');
+        applyViewClass(savedMode);
+
+        if (btnListView) {
+            btnListView.addEventListener('click', () => switchViewMode('list'));
+        }
+        if (btnGridView) {
+            btnGridView.addEventListener('click', () => switchViewMode('grid'));
+        }
+    });
+</script>
+
+<form id="singleProductDeleteForm" action="" method="post" style="display:none;">
+    {% csrf_token %}
+</form>
 {% endif %}
 
 {% endblock %}

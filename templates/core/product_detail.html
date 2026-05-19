@@ -220,6 +220,7 @@
 
             <!-- Action Box (Chốt Sale) -->
             <div class="mb-3">
+                {% if user.nhanvien or user.quanly or user.is_superuser %}
                 <div class="d-flex align-items-center gap-3 mb-3 mt-2">
                     <div style="width:45px;height:45px;border-radius:12px;background:var(--honey-amber);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--honey-dark);">
                         <i class="fa-solid fa-handshake"></i>
@@ -243,6 +244,21 @@
                 <div class="alert mb-3" style="background:var(--status-rented-bg);color:var(--status-rented);border:none;border-radius:10px;font-size:13px;">
                     <i class="fa-solid fa-lock me-1"></i>
                     Phòng đã được thuê.
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="mt-2 mb-3">
+                    {% if phong.trang_thai == 'CHO_DUYET' %}
+                    <div class="alert mb-3" style="background:var(--status-pending-bg);color:var(--status-pending);border:none;border-radius:10px;font-size:13px;">
+                        <i class="fa-solid fa-clock me-1"></i>
+                        Phòng đang chờ quản lý duyệt hợp đồng.
+                    </div>
+                    {% elif phong.trang_thai == 'DA_THUE' %}
+                    <div class="alert mb-3" style="background:var(--status-rented-bg);color:var(--status-rented);border:none;border-radius:10px;font-size:13px;">
+                        <i class="fa-solid fa-lock me-1"></i>
+                        Phòng đã được thuê.
+                    </div>
+                    {% endif %}
                 </div>
                 {% endif %}
 
@@ -457,8 +473,10 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- JSZip for batch download -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-    function downloadAllImages() {
+    async function downloadAllImages() {
         const images = [
             {% for anh in anh_list %}
             "{{ anh.link_anh }}",
@@ -468,23 +486,56 @@
             alert("Phòng này chưa có ảnh.");
             return;
         }
-        let count = 0;
-        images.forEach((url, index) => {
-            fetch(url)
-                .then(response => response.blob())
-                .then(blob => {
-                    const urlObj = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = urlObj;
-                    a.download = `phong_${"{{ phong.pk }}"}_anh_${index + 1}.jpg`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(urlObj);
-                    count++;
-                })
-                .catch(err => console.error('Error downloading image', err));
-        });
+
+        const btn = document.querySelector('button[onclick="downloadAllImages()"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Đang chuẩn bị...';
+
+        try {
+            // Fetch all images and convert to File objects
+            const filePromises = images.map(async (url, index) => {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const cleanUrl = url.split('?')[0];
+                const ext = cleanUrl.split('.').pop() || 'jpg';
+                return new File([blob], `anh_${index + 1}.${ext}`, { type: blob.type });
+            });
+
+            const filesArray = await Promise.all(filePromises);
+
+            // Try iOS Web Share API (Save X images directly in Photos)
+            if (navigator.canShare && navigator.canShare({ files: filesArray })) {
+                await navigator.share({
+                    files: filesArray,
+                    title: 'Ảnh phòng {{ phong.ten_ch|escapejs }}',
+                });
+            } else {
+                // Desktop / Fallback to ZIP
+                const zip = new JSZip();
+                filesArray.forEach((file) => {
+                    zip.file(file.name, file);
+                });
+                const content = await zip.generateAsync({ type: "blob" });
+                
+                const urlObj = window.URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = urlObj;
+                a.download = `phong_${"{{ phong.pk }}"}_anh.zip`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(urlObj);
+            }
+        } catch (err) {
+            console.error('Lỗi khi tải/chia sẻ ảnh:', err);
+            if (err.name !== 'AbortError') {
+                alert("Có lỗi xảy ra trong quá trình xử lý ảnh. Vui lòng thử lại.");
+            }
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
     }
 
     function copyDescription() {
