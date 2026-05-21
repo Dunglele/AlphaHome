@@ -5,61 +5,273 @@
 {% block active_map %}active{% endblock %}
 
 {% block extra_head %}
-<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <style>
-    #map { height: 600px; width: 100%; border-radius: 12px; z-index: 1; }
-    .leaflet-popup-content-wrapper { border-radius: 8px; }
-    .leaflet-popup-content { margin: 12px; }
+    #map {
+        height: calc(100vh - 220px);
+        min-height: 520px;
+        width: 100%;
+        border-radius: 14px;
+        z-index: 1;
+        box-shadow: 0 4px 24px rgba(0,0,0,.13);
+    }
+    .map-toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+    .btn-locate {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 18px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(245,158,11,.35);
+        transition: all .2s;
+    }
+    .btn-locate:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(245,158,11,.45); }
+    .btn-locate:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    .btn-reset-map {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 16px;
+        background: rgba(255,255,255,.08);
+        color: var(--bs-body-color, #333);
+        border: 1.5px solid rgba(0,0,0,.12);
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+    }
+    .btn-reset-map:hover { background: rgba(0,0,0,.06); }
+
+    .stat-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        background: rgba(245,158,11,.12);
+        color: #b45309;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+    .locate-status {
+        font-size: 12px;
+        color: #6b7280;
+        margin-left: 4px;
+    }
+    /* Custom marker cho user location */
+    .user-marker-pulse {
+        width: 18px; height: 18px;
+        background: #3b82f6;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        box-shadow: 0 0 0 0 rgba(59,130,246,.5);
+        animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+        0%   { box-shadow: 0 0 0 0   rgba(59,130,246,.5); }
+        70%  { box-shadow: 0 0 0 14px rgba(59,130,246,0);  }
+        100% { box-shadow: 0 0 0 0   rgba(59,130,246,0);   }
+    }
+    .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.15); }
+    .leaflet-popup-content { margin: 14px; min-width: 190px; }
+    .popup-title { font-weight: 800; font-size: 14px; margin-bottom: 5px; color: #111; }
+    .popup-price { color: #dc2626; font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+    .popup-dist  { color: #6b7280; font-size: 12px; margin-bottom: 8px; }
+    .popup-btn   {
+        display: block; text-align: center; padding: 6px;
+        background: linear-gradient(135deg,#f59e0b,#d97706);
+        color:#fff; border-radius:6px; font-size:12px;
+        font-weight:700; text-decoration:none;
+    }
+    .popup-btn:hover { color:#fff; opacity:.9; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-3">
     <h1 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;margin:0;">
         <i class="fa-solid fa-map-location-dot me-2" style="color:var(--honey-primary);"></i>
-        Bản đồ vị trí các căn hộ
+        Bản đồ vị trí căn hộ
     </h1>
+    <span class="stat-badge">
+        <i class="fa-solid fa-circle-dot"></i>
+        <span id="room-count">{{ map_data_json|length }}</span> phòng đang hiển thị
+    </span>
 </div>
 
-<div class="ah-panel">
+<div class="ah-panel" style="padding: 16px;">
+    <div class="map-toolbar">
+        <button id="btn-locate" class="btn-locate" onclick="locateMe()">
+            <i class="fa-solid fa-location-crosshairs"></i>
+            Xác định vị trí của tôi
+        </button>
+        <button class="btn-reset-map" onclick="resetMap()">
+            <i class="fa-solid fa-arrows-to-circle"></i>
+            Toàn TP.HCM
+        </button>
+        <span class="locate-status" id="locate-status"></span>
+    </div>
+
     <div id="map"></div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
 <script>
-    // Khởi tạo bản đồ, trung tâm là TP.HCM
-    var map = L.map('map').setView([10.7769, 106.7009], 11);
+// ─── Khởi tạo bản đồ ───────────────────────────────────────────
+const HCM_CENTER = [10.7769, 106.7009];
+const map = L.map('map', { zoomControl: false }).setView(HCM_CENTER, 11);
 
-    // Thêm tile layer (bản đồ nền)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    // Dữ liệu bản đồ từ backend
-    var rooms = {{ map_data_json|safe }};
-    
-    // Thêm markers
-    rooms.forEach(function(room) {
-        var marker = L.marker([room.lat, room.lng]).addTo(map);
-        
-        var imgHtml = room.anh_url ? `<img src="${room.anh_url}" style="width:100%; height:120px; object-fit:cover; border-radius:4px; margin-bottom:8px;">` : '';
-        
-        var popupContent = `
-            <div style="min-width: 180px;">
-                ${imgHtml}
-                <h6 style="font-weight: 700; margin-bottom: 5px; font-size: 14px;">${room.ten}</h6>
-                <p style="margin-bottom: 5px; color: #dc3545; font-weight: 600;">${room.gia}</p>
-                <p style="margin-bottom: 10px; font-size: 13px;">Trạng thái: <strong>${room.trang_thai}</strong></p>
-                <a href="${room.url}" class="btn-honey d-block text-center py-1 text-decoration-none" style="font-size: 12px; border-radius: 4px;">Xem chi tiết</a>
-            </div>
-        `;
-        
-        marker.bindPopup(popupContent);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+}).addTo(map);
+
+// ─── Dữ liệu phòng từ backend ──────────────────────────────────
+const rooms = {{ map_data_json|safe }};
+document.getElementById('room-count').textContent = rooms.length;
+
+// Icon tuỳ chỉnh
+const roomIcon = L.divIcon({
+    html: '<div style="width:14px;height:14px;background:#f59e0b;border:2.5px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.3);"></div>',
+    className: '',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+    popupAnchor: [0, -10]
+});
+
+const markers = [];
+
+rooms.forEach(room => {
+    const m = L.marker([room.lat, room.lng], { icon: roomIcon }).addTo(map);
+    m.roomData = room;
+
+    const imgHtml = room.anh_url
+        ? `<img src="${room.anh_url}" style="width:100%;height:110px;object-fit:cover;border-radius:6px;margin-bottom:8px;">`
+        : '';
+
+    m.bindPopup(`
+        <div>
+            ${imgHtml}
+            <div class="popup-title">${room.ten}</div>
+            <div class="popup-price">${room.gia}/tháng</div>
+            <div class="popup-dist" id="dist-${room.id}">📍 ${room.trang_thai}</div>
+            <a href="${room.url}" class="popup-btn">Xem chi tiết →</a>
+        </div>
+    `);
+    markers.push(m);
+});
+
+// ─── Vị trí người dùng ─────────────────────────────────────────
+let userMarker = null;
+let userLat = null, userLng = null;
+
+const userIcon = L.divIcon({
+    html: '<div class="user-marker-pulse"></div>',
+    className: '',
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+    popupAnchor: [0, -12]
+});
+
+function haversine(lat1, lng1, lat2, lng2) {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+              Math.sin(dLng/2)**2;
+    return R * 2 * Math.asin(Math.sqrt(a));
+}
+
+function formatDist(km) {
+    return km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
+}
+
+function updateDistances() {
+    if (userLat === null) return;
+    markers.forEach(m => {
+        const d = haversine(userLat, userLng, m.roomData.lat, m.roomData.lng);
+        const el = document.getElementById(`dist-${m.roomData.id}`);
+        if (el) el.textContent = `📍 Cách bạn ${formatDist(d)}`;
     });
+}
+
+function locateMe() {
+    const btn = document.getElementById('btn-locate');
+    const status = document.getElementById('locate-status');
+
+    if (!navigator.geolocation) {
+        status.textContent = '❌ Trình duyệt không hỗ trợ định vị.';
+        return;
+    }
+
+    btn.disabled = true;
+    status.textContent = '⏳ Đang xác định vị trí...';
+
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            userLat = pos.coords.latitude;
+            userLng = pos.coords.longitude;
+
+            if (userMarker) map.removeLayer(userMarker);
+            userMarker = L.marker([userLat, userLng], { icon: userIcon })
+                .addTo(map)
+                .bindPopup('<b>📍 Vị trí của bạn</b>')
+                .openPopup();
+
+            map.setView([userLat, userLng], 14);
+            updateDistances();
+
+            // Tìm phòng gần nhất
+            let nearest = null, nearestDist = Infinity;
+            markers.forEach(m => {
+                const d = haversine(userLat, userLng, m.roomData.lat, m.roomData.lng);
+                if (d < nearestDist) { nearestDist = d; nearest = m; }
+            });
+
+            btn.disabled = false;
+            if (nearest) {
+                status.textContent = `✅ Đã xác định! Phòng gần nhất: "${nearest.roomData.ten}" — ${formatDist(nearestDist)}`;
+                nearest.openPopup();
+            } else {
+                status.textContent = '✅ Đã xác định vị trí của bạn.';
+            }
+        },
+        err => {
+            btn.disabled = false;
+            const msg = {
+                1: '❌ Bạn đã từ chối cấp quyền định vị.',
+                2: '❌ Không lấy được vị trí. Thử lại sau.',
+                3: '❌ Hết thời gian chờ.'
+            }[err.code] || '❌ Lỗi không xác định.';
+            status.textContent = msg;
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+function resetMap() {
+    map.setView(HCM_CENTER, 11);
+    document.getElementById('locate-status').textContent = '';
+}
 </script>
 {% endblock %}

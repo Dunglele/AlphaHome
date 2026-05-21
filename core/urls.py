@@ -34,14 +34,14 @@ urlpatterns = [
     # Report & Map
     path('bao-cao/', views.ReportView.as_view(), name='report'),
     path('ban-do/', views.MapView.as_view(), name='map'),
-    
+
     # Account Management (Manager)
-    path('quan-ly/tai-khoan/',       views.AccountListView.as_view(),   name='account_list'),
-    path('quan-ly/tai-khoan/them/',  views.AccountCreateView.as_view(), name='account_create'),
+    path('quan-ly/tai-khoan/',              views.AccountListView.as_view(),   name='account_list'),
+    path('quan-ly/tai-khoan/them/',         views.AccountCreateView.as_view(), name='account_create'),
     path('quan-ly/tai-khoan/<int:pk>/xoa/', views.AccountDeleteView.as_view(), name='account_delete'),
-    path('quan-ly/tai-khoan/<int:pk>/sua/', views.AccountEditView.as_view(), name='account_edit'),
-    
+    path('quan-ly/tai-khoan/<int:pk>/sua/', views.AccountEditView.as_view(),   name='account_edit'),
+
     # Profile & Security
-    path('ho-so/',           views.ProfileView.as_view(),           name='profile'),
-    path('doi-mat-khau/',    views.AlphaPasswordChangeView.as_view(), name='password_change'),
+    path('ho-so/',        views.ProfileView.as_view(),            name='profile'),
+    path('doi-mat-khau/', views.AlphaPasswordChangeView.as_view(), name='password_change'),
 ]

@@ -307,6 +307,11 @@
     </div>
 </div>
 
+<form id="singleProductDeleteForm" action="" method="post" style="display:none;">
+    {% csrf_token %}
+</form>
+{% endif %}
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const selectAllCheckbox = document.getElementById('selectAll');
@@ -317,8 +322,9 @@
         const bulkActionForm = document.getElementById('bulkActionForm');
 
         function updateBulkActionBar() {
+            if (!selectedCountSpan || !bulkActionBar) return;
             const checkedCount = document.querySelectorAll('.product-checkbox:checked').length;
-            if (selectedCountSpan) selectedCountSpan.textContent = checkedCount;
+            selectedCountSpan.textContent = checkedCount;
             
             if (checkedCount > 0) {
                 bulkActionBar.classList.remove('d-none');
@@ -346,6 +352,7 @@
         });
 
         window.submitBulkAction = function(actionName) {
+            if (!bulkActionInput || !bulkActionForm) return;
             let confirmMsg = '';
             if (actionName === 'status_trong') confirmMsg = 'Bạn có chắc chắn muốn chuyển tất cả phòng đã chọn thành trạng thái "Còn trống"?';
             else if (actionName === 'status_dathue') confirmMsg = 'Bạn có chắc chắn muốn chuyển tất cả phòng đã chọn thành trạng thái "Đã thuê"?';
@@ -366,8 +373,10 @@
                 const confirmMsg = this.getAttribute('data-confirm');
                 if (confirm(confirmMsg)) {
                     const form = document.getElementById('singleProductDeleteForm');
-                    form.action = url;
-                    form.submit();
+                    if (form) {
+                        form.action = url;
+                        form.submit();
+                    }
                 }
             });
         });
@@ -415,10 +424,5 @@
         }
     });
 </script>
-
-<form id="singleProductDeleteForm" action="" method="post" style="display:none;">
-    {% csrf_token %}
-</form>
-{% endif %}
 
 {% endblock %}

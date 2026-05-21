@@ -1111,4 +1111,7 @@ h1, h2, h3, h4, h5, h6,
     .ah-product-container.grid-mode .d-flex.gap-3.flex-wrap {
         display: none !important;
     }
+    .ah-product-container.grid-mode .badge-available {
+        display: none !important;
+    }
 }
