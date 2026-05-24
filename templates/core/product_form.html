@@ -25,17 +25,39 @@
                 <div class="ah-panel-title"><i class="fa-solid fa-circle-info"></i> Thông tin cơ bản</div>
                 <div class="row g-3">
                     <div class="col-12">
-                        <label class="form-label" for="id_ten_ch">Tên phòng / căn hộ <span class="text-danger">*</span></label>
+                        <label class="form-label" for="id_ten_ch">Tên phòng / căn hộ <span
+                                class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="ten_ch" id="id_ten_ch"
-                               value="{{ phong.ten_ch|default:'' }}" placeholder="Ví dụ: Phòng trọ cao cấp Quận 1 full nội thất" required>
+                            value="{{ phong.ten_ch|default:'' }}"
+                            placeholder="Ví dụ: Phòng trọ cao cấp Quận 1 full nội thất" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label" for="id_gia">Giá thuê (VNĐ/tháng) <span class="text-danger">*</span></label>
+                        <label class="form-label" for="id_gia">Giá thuê (VNĐ/tháng) <span
+                                class="text-danger">*</span></label>
                         <input type="number" class="form-control" name="gia" id="id_gia"
-                               value="{{ phong.gia|default:'' }}" placeholder="5000000" min="0" required>
+                            value="{{ phong.gia|default:'' }}" placeholder="5000000" min="0" required>
+                        <div id="tienFormat" class="fw-bold mt-1" style="color:var(--price-color); font-size:13px;">
+                        </div>
+                        <script>
+                            (function () {
+                                function formatLocal() {
+                                    const input = document.getElementById('id_gia');
+                                    const formatDiv = document.getElementById('tienFormat');
+                                    if (input && formatDiv) {
+                                        const val = parseInt(input.value) || 0;
+                                        formatDiv.textContent = val > 0 ? new Intl.NumberFormat('vi-VN').format(val) + ' đ' : '';
+                                    }
+                                }
+                                // Run once elements are parsed
+                                formatLocal();
+                                // Listen for input
+                                document.getElementById('id_gia').addEventListener('input', formatLocal);
+                            })();
+                        </script>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label" for="id_loai_phong">Loại phòng <span class="text-danger">*</span></label>
+                        <label class="form-label" for="id_loai_phong">Loại phòng <span
+                                class="text-danger">*</span></label>
                         <select class="form-select" name="loai_phong" id="id_loai_phong" required>
                             <option value="BANCOL" {% if phong.loai_phong == 'BANCOL' %}selected{% endif %}>Bancol</option>
                             <option value="DUPLEX" {% if phong.loai_phong == 'DUPLEX' %}selected{% endif %}>Duplex</option>
@@ -43,19 +65,18 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label" for="id_chuyen_muc">Chuyên mục <span class="text-danger">*</span></label>
+                        <label class="form-label" for="id_chuyen_muc">Chuyên mục <span
+                                class="text-danger">*</span></label>
                         <select class="form-select" name="chuyen_muc" id="id_chuyen_muc" required>
                             {% for cm in chuyen_muc_list %}
-                            <option value="{{ cm.pk }}" {% if phong.chuyen_muc_id == cm.pk %}selected{% endif %}>
-                                {{ cm.ten_cm }}
-                            </option>
+                            <option value="{{ cm.pk }}" {% if phong.chuyen_muc_id == cm.pk %}selected{% endif %}>{{ cm.ten_cm }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="id_dien_tich">Diện tích (m²)</label>
                         <input type="number" class="form-control" name="dien_tich" id="id_dien_tich"
-                               value="{{ phong.dien_tich|default:'' }}" placeholder="30" step="0.1" min="0">
+                            value="{{ phong.dien_tich|default:'' }}" placeholder="30" step="0.1" min="0">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="id_trang_thai">Trạng thái</label>
@@ -68,7 +89,7 @@
                     <div class="col-12">
                         <label class="form-label" for="id_mo_ta">Mô tả chi tiết</label>
                         <textarea class="form-control" name="mo_ta" id="id_mo_ta" rows="5"
-                                  placeholder="Mô tả chi tiết về phòng, tiện nghi, lưu ý...">{{ phong.mo_ta|default:'' }}</textarea>
+                            placeholder="Mô tả chi tiết về phòng, tiện nghi, lưu ý...">{{ phong.mo_ta|default:'' }}</textarea>
                     </div>
                 </div>
             </div>
@@ -80,7 +101,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="id_tinh">Tỉnh / Thành phố</label>
                         <input type="text" class="form-control" name="tinh" id="id_tinh"
-                               value="{{ phong.dia_chi.tinh|default:'TP Hồ Chí Minh' }}">
+                            value="{{ phong.dia_chi.tinh|default:'TP Hồ Chí Minh' }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="id_quan">Quận / Huyện <span class="text-danger">*</span></label>
@@ -113,7 +134,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="id_dia_chi_cu_the">Địa chỉ cụ thể</label>
                         <input type="text" class="form-control" name="dia_chi_cu_the" id="id_dia_chi_cu_the"
-                               value="{{ phong.dia_chi.dia_chi_cu_the|default:'' }}" placeholder="123 Nguyễn Trãi">
+                            value="{{ phong.dia_chi.dia_chi_cu_the|default:'' }}" placeholder="123 Nguyễn Trãi">
                     </div>
                 </div>
             </div>
@@ -121,36 +142,43 @@
             <!-- Images -->
             <div class="ah-panel mb-4">
                 <div class="ah-panel-title"><i class="fa-solid fa-images"></i> Ảnh sản phẩm</div>
-                
+
                 <div class="row g-4">
                     <!-- Phía trên: Input -->
                     <div class="col-md-12">
-                        <div class="upload-zone p-4 border border-dashed rounded-4 text-center mb-4" style="border: 2px dashed #dee2e6; background: #f8f9fa;">
+                        <div class="upload-zone p-4 border border-dashed rounded-4 text-center mb-4"
+                            style="border: 2px dashed #dee2e6; background: #f8f9fa;">
                             <i class="fa-solid fa-cloud-arrow-up text-muted mb-2" style="font-size: 40px;"></i>
                             <h6 class="mb-1">Tải ảnh lên từ thiết bị</h6>
                             <p class="text-muted small mb-3">Hỗ trợ JPG, PNG, WEBP. Bạn có thể chọn nhiều tệp.</p>
-                            <input type="file" class="form-control d-none" name="anh_files" id="anh_files" multiple accept="image/*">
-                            <button type="button" class="btn btn-honey-outline btn-sm px-4" onclick="document.getElementById('anh_files').click()">
+                            <input type="file" class="form-control d-none" name="anh_files" id="anh_files" multiple
+                                accept="image/*">
+                            <button type="button" class="btn btn-honey-outline btn-sm px-4"
+                                onclick="document.getElementById('anh_files').click()">
                                 <i class="fa-solid fa-folder-open me-1"></i> Chọn tệp tin
                             </button>
                         </div>
 
-                        <label class="form-label fw-bold small text-uppercase" style="letter-spacing: 0.5px;">Hoặc nhập Link ảnh (URL)</label>
+                        <label class="form-label fw-bold small text-uppercase" style="letter-spacing: 0.5px;">Hoặc nhập
+                            Link ảnh (URL)</label>
                         <div id="anhContainer">
                             {% if phong %}
                             {% for anh in phong.anh_set.all %}
                             <div class="d-flex gap-2 mb-2 anh-row">
                                 <input type="url" class="form-control form-control-sm url-input" name="anh_url"
-                                       value="{{ anh.link_anh }}" placeholder="https://...">
-                                <button type="button" class="btn btn-sm btn-outline-danger rounded-2 flex-shrink-0 remove-anh">
+                                    value="{{ anh.link_anh }}" placeholder="https://...">
+                                <button type="button"
+                                    class="btn btn-sm btn-outline-danger rounded-2 flex-shrink-0 remove-anh">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>
                             </div>
                             {% endfor %}
                             {% else %}
                             <div class="d-flex gap-2 mb-2 anh-row">
-                                <input type="url" class="form-control form-control-sm url-input" name="anh_url" placeholder="https://images.unsplash.com/...">
-                                <button type="button" class="btn btn-sm btn-outline-danger rounded-2 flex-shrink-0 remove-anh">
+                                <input type="url" class="form-control form-control-sm url-input" name="anh_url"
+                                    placeholder="https://images.unsplash.com/...">
+                                <button type="button"
+                                    class="btn btn-sm btn-outline-danger rounded-2 flex-shrink-0 remove-anh">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>
                             </div>
@@ -168,7 +196,8 @@
                         <div id="previewGrid" class="row g-2">
                             <!-- Preview items will appear here -->
                         </div>
-                        <div id="noPreview" class="text-center py-4 text-muted border rounded-3 bg-light" style="font-size: 13px;">
+                        <div id="noPreview" class="text-center py-4 text-muted border rounded-3 bg-light"
+                            style="font-size: 13px;">
                             <i class="fa-solid fa-image-slash d-block mb-2" style="font-size: 24px;"></i>
                             Chưa có ảnh nào được chọn
                         </div>
@@ -196,6 +225,7 @@
         width: 100px;
         height: 100px;
     }
+
     .preview-item img {
         width: 100%;
         height: 100%;
@@ -203,6 +233,7 @@
         border-radius: 8px;
         border: 1px solid var(--border);
     }
+
     .preview-badge {
         position: absolute;
         top: -5px;
@@ -212,9 +243,10 @@
         font-size: 10px;
         padding: 2px 6px;
         border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         z-index: 2;
     }
+
     .btn-remove-preview {
         position: absolute;
         bottom: -5px;
@@ -230,10 +262,11 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         z-index: 2;
         transition: transform 0.2s;
     }
+
     .btn-remove-preview:hover {
         transform: scale(1.2);
         background: #ff6b81;
@@ -254,7 +287,7 @@
         Array.from(dt.files).forEach((file, index) => {
             hasImage = true;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 addPreviewItem(e.target.result, 'Tệp', 'file', index);
             }
             reader.readAsDataURL(file);
@@ -286,7 +319,7 @@
         previewGrid.appendChild(div);
     }
 
-    window.removePreview = function(type, index) {
+    window.removePreview = function (type, index) {
         if (type === 'file') {
             const newDt = new DataTransfer();
             Array.from(dt.files).forEach((file, i) => {
@@ -305,7 +338,7 @@
     }
 
     // Listeners
-    fileInput.addEventListener('change', function() {
+    fileInput.addEventListener('change', function () {
         // Add new files to our DataTransfer object
         for (let file of this.files) {
             dt.items.add(file);
@@ -313,7 +346,7 @@
         this.files = dt.files; // Sync back to input
         updatePreview();
     });
-    
+
     anhContainer.addEventListener('input', (e) => {
         if (e.target.classList.contains('url-input')) updatePreview();
     });
@@ -337,7 +370,7 @@
         }
     });
 
-    // Initial preview if editing
-    window.onload = updatePreview;
+    // Run immediately since DOM elements are already parsed above
+    updatePreview();
 </script>
 {% endblock %}
